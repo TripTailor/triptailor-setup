@@ -14,6 +14,11 @@ val dbDependencies = Seq(
   "com.zaxxer" % "HikariCP" % "2.3.5" % Compile
 )
 
+val nlpAnalysisDependencies = Seq(
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.2",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.5.2" classifier "models"
+)
+
 val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" % "akka-stream-experimental_2.11" % akkaStreamsVersion,
@@ -26,9 +31,9 @@ val testDependencies = Seq(
 )
 
 val ammoniteRepl = Seq(
-  "com.lihaoyi" % "ammonite-repl" % "0.4.3" cross CrossVersion.full
+  "com.lihaoyi" % "ammonite-repl" % "0.4.5" cross CrossVersion.full
 )
 
-libraryDependencies ++= dbDependencies ++ akkaDependencies ++ testDependencies ++ ammoniteRepl
+libraryDependencies ++= dbDependencies ++ akkaDependencies ++ nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
 
 initialCommands in console := """ammonite.repl.Repl.main(Array())"""
