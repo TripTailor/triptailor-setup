@@ -31,7 +31,7 @@ object Test extends AnnotatorService {
 
     for (sentence <- sentences) {
       val tree      = sentence.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
-      val sentiment = RNNCoreAnnotations.getPredictedClass(tree)
+      val sentiment = RNNCoreAnnotations.getPredictedClass(tree) // Sentiment values range between (0,4)
       println(sentence)
 
       for (token <- sentence.get(classOf[TokensAnnotation]).asScala) {
@@ -56,4 +56,5 @@ object Test extends AnnotatorService {
   }
 
   def config: Config = ConfigFactory.load("nlp")
+
 }
