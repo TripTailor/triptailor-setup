@@ -10,7 +10,7 @@ object Test extends AnnotatorService {
         |The rooftop is very amazing for partying and having drinks and the staff is so friendly and nice""".stripMargin
 
     val ratedReview = rateReview(text, timeModifier = 0)
-    ratedReview.sentences foreach println
+    ratedReview.tokens foreach println
   }
 
   def config: Config = ConfigFactory.load("nlp")
