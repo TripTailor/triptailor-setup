@@ -16,13 +16,17 @@ import scala.collection.JavaConverters._
 
 trait NLPConfig {
   def config: Config
+  def baseYear: Int
   def annotators: String
+  def stopWords: Set[String]
 }
 
 trait AnnotatorService extends NLPConfig {
+  val baseYear   = config.getInt("nlp.baseYear")
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
+  val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
 
-  def rateReview(text: String, timeModifier: Double): RatedReview = {
+  def rateReview(text: String, reviewYear: Double): RatedReview = {
     val props = new Properties
     props.setProperty("annotators", annotators)
 
@@ -32,21 +36,21 @@ trait AnnotatorService extends NLPConfig {
     pipeline.annotate(unratedReview)
 
     val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
-    val ratedSentences   = rateSentences(unratedSentences, timeModifier)
+    val ratedSentences   = rateSentences(unratedSentences, reviewYear)
 
     val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
     val metrics = ratedSentences.map(_.metrics).reduce(mergeMetrics)
     RatedReview(tokens, metrics)
   }
 
-  private def rateSentences(sentences: Seq[CoreMap], timeModifier: Double): Seq[RatedSentence] =
+  private def rateSentences(sentences: Seq[CoreMap], reviewYear: Double): Seq[RatedSentence] =
     for {
       sentence           ← sentences
       tree               = sentence.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
       sentiment          = RNNCoreAnnotations.getPredictedClass(tree)
       tokens             = buildAnnotatedTokens(sentence.get(classOf[TokensAnnotation]).asScala)
       positionedSentence = AnnotatedSentence(sentence.toString, createAnnotatedPositionedTokens(tokens), Sentiment(sentiment))
-      metrics            = calculateSentenceMetrics(positionedSentence, timeModifier)
+      metrics            = calculateSentenceMetrics(positionedSentence, reviewYear)
     } yield RatedSentence(positionedSentence, metrics)
 
   private def mergeAnnotatedPositionedTokens(tokens: Seq[AnnotatedPositionedToken]) =
@@ -73,8 +77,8 @@ trait AnnotatorService extends NLPConfig {
   private def buildAnnotatedTokens(tokens: Seq[CoreLabel]): Seq[AnnotatedToken] =
     for {
       token ← tokens
-      lemma = token.get(classOf[LemmaAnnotation])
-      pos   = token.get(classOf[PartOfSpeechAnnotation])
+      lemma = token.get(classOf[LemmaAnnotation]) if !(stopWords contains lemma) && !(lemma matches ".*?[^a-zA-Z-]+.*?")
+      pos   = token.get(classOf[PartOfSpeechAnnotation]) if pos.equals("NN") || pos.equals("NNS") || pos.equals("JJ")
       ne    = token.get(classOf[NamedEntityAnnotation])
       start = token.beginPosition()
       end   = token.endPosition()
@@ -99,10 +103,11 @@ trait AnnotatorService extends NLPConfig {
     }
   }
 
-  private def calculateSentenceMetrics(sentence: AnnotatedSentence, timeModifer: Double) =
+  private def calculateSentenceMetrics(sentence: AnnotatedSentence, reviewYear: Double) =
     sentence.tokens.map { token =>
       val nbrAnnotatedTokens = token.positions.size
-      token.attribute -> RatingMetrics(sentiment = sentence.sentiment * nbrAnnotatedTokens, freq = nbrAnnotatedTokens, cfreq = timeModifer * nbrAnnotatedTokens)
+      val timeModifier = 1 / math.log(baseYear - reviewYear)
+      token.attribute -> RatingMetrics(sentiment = sentence.sentiment * nbrAnnotatedTokens, freq = nbrAnnotatedTokens, cfreq = timeModifier * nbrAnnotatedTokens)
     }.toMap
 
 }

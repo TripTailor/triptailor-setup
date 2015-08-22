@@ -9,7 +9,7 @@ object Test extends AnnotatorService {
       """The rooms are clean, same for the bathrooms. There are activities each night.
         |The rooftop is very amazing for partying and having drinks and the staff is so friendly and nice""".stripMargin
 
-    val ratedReview = rateReview(text, timeModifier = 0)
+    val ratedReview = rateReview(text, reviewYear = 2014)
     ratedReview.tokens foreach println
   }
 
