@@ -1,8 +1,9 @@
-package co.triptailor.setup
+package co.triptailor.setup.nlp
 
 import java.util.Properties
 import java.util.stream.Collectors
 
+import co.triptailor.setup.domain._
 import com.typesafe.config.Config
 import edu.stanford.nlp.dcoref.CoNLL2011DocumentReader.NamedEntityAnnotation
 import edu.stanford.nlp.ling.CoreAnnotations._
@@ -13,6 +14,7 @@ import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.util.CoreMap
 
 import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContext, Future, blocking}
 
 trait NLPConfig {
   def config: Config
@@ -21,26 +23,30 @@ trait NLPConfig {
   def stopWords: Set[String]
 }
 
-trait AnnotatorService extends NLPConfig {
+trait NLPAnalysisService extends NLPConfig {
   val baseYear   = config.getInt("nlp.baseYear")
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
 
-  def rateReview(text: String, reviewYear: Double): RatedReview = {
+  def rateReview(text: String, reviewYear: Double)(implicit ec: ExecutionContext): Future[RatedReview] = {
     val props = new Properties
     props.setProperty("annotators", annotators)
 
     val pipeline      = new StanfordCoreNLP(props)
     val unratedReview = new Annotation(text)
 
-    pipeline.annotate(unratedReview)
+    Future {
+      blocking {
+        pipeline.annotate(unratedReview)
 
-    val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
-    val ratedSentences   = rateSentences(unratedSentences, reviewYear)
+        val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
+        val ratedSentences   = rateSentences(unratedSentences, reviewYear)
 
-    val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
-    val metrics = ratedSentences.map(_.metrics).reduce(mergeMetrics)
-    RatedReview(tokens, metrics)
+        val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
+        val metrics = ratedSentences.map(_.metrics).reduce(mergeMetrics)
+        RatedReview(tokens, metrics)
+      }
+    }
   }
 
   private def rateSentences(sentences: Seq[CoreMap], reviewYear: Double): Seq[RatedSentence] =

@@ -1,4 +1,4 @@
-package co.triptailor.setup
+package co.triptailor.setup.domain
 
 object Sentiment {
   val VeryPositive = 4
@@ -14,6 +14,9 @@ object Sentiment {
     else if (value == 3) Positive
     else VeryPositive
 }
+
+case class ReviewMetaData(text: String, reviewYear: Int, hoscars: Int)
+case class UnratedReview(meta: ReviewMetaData, hostelName: String, city: String, country: String)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
 case class Position(start: Int, end: Int)
