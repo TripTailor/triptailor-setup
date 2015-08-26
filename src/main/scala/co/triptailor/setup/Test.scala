@@ -5,6 +5,7 @@ import java.util.concurrent.Executors
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
+import co.triptailor.setup.domain.{UnratedReview, UnratedDocumentParser}
 import co.triptailor.setup.nlp.NLPAnalysisService
 import com.typesafe.config.{Config, ConfigFactory}
 
@@ -21,6 +22,14 @@ object Test extends NLPAnalysisService {
 
     val start = System.currentTimeMillis()
 
+    val parser = new UnratedDocumentParser
+    parser.parse(
+      new java.io.File("/Users/sheaney/Documents/triptailor-setup/data/USA/San Francisco/HI_-_San_Francisco_-_City_Center_general.txt"),
+      new java.io.File("/Users/sheaney/Documents/triptailor-setup/data/USA/San Francisco/HI_-_San_Francisco_-_City_Center_reviews.txt")
+    ).runForeach(println) onComplete {
+      _ => println("Done parsing files")
+    }
+
 //    syncFlow.runForeach(_.tokens foreach println) onComplete { _ =>
 //      system.shutdown()
 //      es.shutdown()
@@ -32,13 +41,14 @@ object Test extends NLPAnalysisService {
       es.shutdown()
         println(s"total time: ${System.currentTimeMillis() - start}")
     }
+
   }
 
   def syncFlow(implicit ec: ExecutionContext) =
-    Source(sampleText).mapAsync(parallelism = 1)(rateReview(_, reviewYear = 2004))
+    Source(sampleText).mapAsync(parallelism = 1)(text => rateReview(UnratedReview(text, None)))
 
   def asyncFlow(parallelism: Int)(implicit ec: ExecutionContext) =
-    Source(sampleText).mapAsync(parallelism)(rateReview(_, reviewYear = 2004))
+    Source(sampleText).mapAsyncUnordered(parallelism)(text => rateReview(UnratedReview(text, None)))
 
   def sampleText =
     Vector(

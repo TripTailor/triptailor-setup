@@ -1,4 +1,5 @@
-package db
+package co.triptailor.setup.db
+
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends {

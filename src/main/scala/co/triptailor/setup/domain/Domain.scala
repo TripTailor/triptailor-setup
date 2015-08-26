@@ -1,5 +1,7 @@
 package co.triptailor.setup.domain
 
+import org.joda.time.DateTime
+
 object Sentiment {
   val VeryPositive = 4
   val Positive     = 3
@@ -15,8 +17,9 @@ object Sentiment {
     else VeryPositive
 }
 
-case class ReviewMetaData(text: String, reviewYear: Int, hoscars: Int)
-case class UnratedReview(meta: ReviewMetaData, hostelName: String, city: String, country: String)
+case class UnratedHostelMetaData(name: String, hoscars: Int, services: Seq[String])
+case class UnratedReview(text: String, date: Option[DateTime])
+case class UnratedDocument(reviewData: Seq[UnratedReview], info: UnratedHostelMetaData)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
 case class Position(start: Int, end: Int)

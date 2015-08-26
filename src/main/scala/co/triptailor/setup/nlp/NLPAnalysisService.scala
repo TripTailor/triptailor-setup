@@ -28,19 +28,19 @@ trait NLPAnalysisService extends NLPConfig {
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
 
-  def rateReview(text: String, reviewYear: Double)(implicit ec: ExecutionContext): Future[RatedReview] = {
+  def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
     val props = new Properties
     props.setProperty("annotators", annotators)
 
     val pipeline      = new StanfordCoreNLP(props)
-    val unratedReview = new Annotation(text)
+    val unratedReview = new Annotation(reviewData.text)
 
     Future {
       blocking {
         pipeline.annotate(unratedReview)
 
         val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
-        val ratedSentences   = rateSentences(unratedSentences, reviewYear)
+        val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse baseYear)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
         val metrics = ratedSentences.map(_.metrics).reduce(mergeMetrics)
