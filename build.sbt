@@ -7,6 +7,10 @@ scalaVersion := "2.11.7"
 val akkaVersion        = "2.3.12"
 val akkaStreamsVersion = "1.0"
 
+val utilityDependencies = Seq(
+  "org.joda" % "joda-convert" % "1.7"
+)
+
 val dbDependencies = Seq(
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
   "com.typesafe.slick" %% "slick" % "3.0.1",
@@ -34,6 +38,7 @@ val ammoniteRepl = Seq(
   "com.lihaoyi" % "ammonite-repl" % "0.4.5" cross CrossVersion.full
 )
 
-libraryDependencies ++= dbDependencies ++ akkaDependencies ++ nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
+libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencies ++
+  nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
 
 initialCommands in console := """ammonite.repl.Repl.main(Array())"""
