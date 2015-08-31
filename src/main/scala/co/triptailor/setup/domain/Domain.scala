@@ -3,23 +3,25 @@ package co.triptailor.setup.domain
 import org.joda.time.DateTime
 
 object Sentiment {
-  val VeryPositive = 4
-  val Positive     = 3
-  val Neutral      = 2
-  val Negative     = 1
-  val VeryNegative = 0
+  val VeryPositive = 5
+  val Positive     = 4
+  val Neutral      = 3
+  val Negative     = 2
+  val VeryNegative = 1
 
   def apply(value: Int) =
-    if (value == 0) VeryNegative
-    else if (value == 1) Negative
-    else if (value == 2) Neutral
-    else if (value == 3) Positive
-    else VeryPositive
+    value + 1 match {
+      case 1 => VeryNegative
+      case 2 => Negative
+      case 3 => Neutral
+      case 4 => Positive
+      case 5 => VeryPositive
+    }
 }
 
-case class UnratedHostelMetaData(name: String, hoscars: Int, services: Seq[String])
+case class HostelMetaData(name: String, city: String, country: String, hoscars: Int, services: Seq[String])
 case class UnratedReview(text: String, date: Option[DateTime])
-case class UnratedDocument(reviewData: Seq[UnratedReview], info: UnratedHostelMetaData)
+case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
 case class Position(start: Int, end: Int)
@@ -29,4 +31,5 @@ case class AnnotatedPositionedToken(attribute: String, positions: Seq[Position])
 case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken], sentiment: Int)
 
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
-case class RatedReview(tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics])
+case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics])
+case class RatedDocument(reviews: Seq[RatedReview], info: HostelMetaData)

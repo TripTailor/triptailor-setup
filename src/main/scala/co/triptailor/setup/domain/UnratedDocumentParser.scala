@@ -13,12 +13,12 @@ import org.joda.time.format.DateTimeFormat
 class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMaterializer) {
   import UnratedDocumentParser._
 
-  def parse(generalFile: File, reviewsFile: File): Source[UnratedDocument, Unit] =
+  def parse(generalFile: File, reviewsFile: File, country: String, city: String): Source[UnratedDocument, Unit] =
     Source() { implicit b =>
       import FlowGraph.Implicits._
 
-      val zip = b.add(Zip[UnratedHostelMetaData, Seq[UnratedReview]]())
-      parseGeneralFile(generalFile) ~> zip.in0
+      val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
+      parseGeneralFile(generalFile, city, country) ~> zip.in0
       parseReviewsFile(reviewsFile) ~> zip.in1
 
       zip.out
@@ -28,7 +28,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
 
   def parseReviewsFile(file: File) =
     SynchronousFileSource(file).
-      via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = 512, allowTruncation = true)).
+      via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true)).
       map(_.utf8String).
       grouped(2).
       map { case Seq(meta, text) =>
@@ -37,7 +37,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
         unratedReviewMetaData +: acc
       }
 
-  private def parseGeneralFile(file: File) = {
+  private def parseGeneralFile(file: File, city: String, country: String) = {
     val lines = scala.io.Source.fromFile(file).getLines()
     val hostelName = lines.next().replaceAll(";", "").replaceAll("_", " ")
     lines.next(); lines.next(); lines.next(); lines.next()
@@ -48,8 +48,8 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val noServices = lines.next().toInt
     val services   = lines.take(noServices).toSeq
 
-    val metaData = UnratedHostelMetaData(hostelName, hoscars, services)
-    Source(FastFuture.successful[UnratedHostelMetaData](metaData))
+    val metaData = HostelMetaData(hostelName, city, country, hoscars, services)
+    Source(FastFuture.successful[HostelMetaData](metaData))
   }
 
   private def parseDate(line: String) =

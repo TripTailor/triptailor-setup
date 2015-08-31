@@ -13,8 +13,8 @@ val utilityDependencies = Seq(
 
 val dbDependencies = Seq(
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-  "com.typesafe.slick" %% "slick" % "3.0.1",
-  "com.typesafe.slick" %% "slick-codegen" % "3.0.1",
+  "com.typesafe.slick" %% "slick" % "3.0.2",
+  "com.typesafe.slick" %% "slick-codegen" % "3.0.2",
   "com.zaxxer" % "HikariCP" % "2.3.5" % Compile
 )
 
