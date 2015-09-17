@@ -1,6 +1,6 @@
 package co.triptailor.setup.db
 
-import co.triptailor.setup.domain.{RatingMetrics, RatedDocument}
+import co.triptailor.setup.domain.{RatedDocument, RatedReview}
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 import slick.driver.PostgresDriver.api._
@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DBTableInsertion(implicit val ec: ExecutionContext) {
   import DBTableInsertion._
-  import Tables._
+  import db.Tables._
 
   def addHostelDependencies(document: RatedDocument) = {
     val info = document.info
@@ -20,47 +20,42 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
     } yield hostelId
   }
 
-  def insertLocation(city: String, country: String): Future[Int] =
-    triptailorDB.run(insertLocationQuery(city, country))
-
   def insertHostelInfo(name: String, noReviews: Int, locationId: Int): Future[Int] =
     triptailorDB.run(insertHostelInfoQuery(name, noReviews, locationId))
-
-  def getLocationId(city: String, country: String): Future[Option[Int]] =
-    triptailorDB.run(getLocationIdQuery(city, country).result.headOption)
 
   def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
     for {
       reviewIds   ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
       serviceIds  ← Future.sequence(document.info.services.map(idempotentInsertService))
-      _           = insertHostelAttributes(hostelId, document.reviews.flatMap(_.metrics), reviewIds, serviceIds)
+      _           = insertHostelAttributes(hostelId, document.reviews, reviewIds)
+      _           = insertHostelServices(hostelId, serviceIds)
     } yield hostelId
 
-  private def insertHostelAttributes(hostelId: Int, attributes: Seq[(String,RatingMetrics)], reviewIds: Seq[Int], serviceIds: Seq[Int]) =
-    attributes zip reviewIds zip serviceIds map { case (((attr, metrics), reviewId), serviceId) =>
-      idempotentInsertAttribute(attr).map { aid =>
-        triptailorDB.run(insertHostelServiceQuery(HostelServiceRow(hostelId, serviceId)))
-        triptailorDB.run(insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId)))
-        triptailorDB.run(insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, metrics.freq, metrics.cfreq, metrics.sentiment)))
-//        triptailorDB.run(DBIO.seq(
-//          insertHostelServiceQuery(HostelServiceRow(hostelId, serviceId)),
-//          insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId)),
-//          insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, metrics.freq, metrics.cfreq, metrics.sentiment))
-//        ))
+  private def insertHostelAttributes(hostelId: Int, reviews: Seq[RatedReview], reviewIds: Seq[Int]) =
+    reviews zip reviewIds foreach { case (review, reviewId) =>
+      val ratingMetrics = review.metrics
+      val tokens        = review.tokens
+
+      tokens foreach { token =>
+        idempotentInsertAttribute(token.attribute).map { aid =>
+          val tokenPositions = token.positions.mkString(",")
+          val metrics        = ratingMetrics(token.attribute)
+          triptailorDB.run(DBIO.seq(
+            insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId, tokenPositions)),
+            insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, metrics.freq, metrics.cfreq, metrics.sentiment))
+          ))
+        }
       }
     }
 
-  private def insertLocationQuery(city: String, country: String) =
-    Location.map(l => (l.city, l.country)) returning Location.map(_.id) += (city, country)
+  private def insertHostelServices(hostelId: Int, serviceIds: Seq[Int]) =
+    triptailorDB.run(DBIO.seq(serviceIds.map(sid => insertHostelServiceQuery(HostelServiceRow(hostelId, sid))): _*))
 
   private def insertHostelInfoQuery(name: String, noReviews: Int, locationId: Int) =
     Hostel.map(h => (h.name, h.noReviews, h.locationId)) returning Hostel.map(_.id) += (name, noReviews, locationId)
 
   private def insertReviewQuery(hostelId: Int, text: String) =
     Review.map(r => (r.hostelId, r.text)) returning Review.map(_.id) += (hostelId, text)
-
-  private def getLocationIdQuery(city: String, country: String) =
-    Location.filter(l => l.city === city && l.country === country).map(_.id)
 
   private def insertHostelAttributeQuery(row: HostelAttributeRow) =
     HostelAttribute += row

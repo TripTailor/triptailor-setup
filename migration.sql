@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS "review" (
 CREATE TABLE IF NOT EXISTS "attribute_review" (
   "attribute_id" integer NOT NULL,
   "review_id" integer NOT NULL,
-  "start_pos" integer NOT NULL,
-  "end_pos" integer NOT NULL,
+  "positions" text NOT NULL,
   PRIMARY KEY(attribute_id, review_id)
 );

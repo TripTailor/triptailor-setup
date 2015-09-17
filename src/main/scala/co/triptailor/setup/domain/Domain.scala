@@ -24,7 +24,9 @@ case class UnratedReview(text: String, date: Option[DateTime])
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
-case class Position(start: Int, end: Int)
+case class Position(start: Int, end: Int) {
+  override def productPrefix = ""
+}
 
 case class AnnotatedToken(attribute: String, position: Position)
 case class AnnotatedPositionedToken(attribute: String, positions: Seq[Position])
