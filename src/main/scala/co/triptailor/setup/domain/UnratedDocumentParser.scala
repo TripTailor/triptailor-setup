@@ -13,13 +13,13 @@ import org.joda.time.format.DateTimeFormat
 class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMaterializer) {
   import UnratedDocumentParser._
 
-  def parse(generalFile: File, reviewsFile: File, country: String, city: String): Source[UnratedDocument, Unit] =
+  def parse(doc: DocumentEntry): Source[UnratedDocument, Unit] =
     Source() { implicit b =>
       import FlowGraph.Implicits._
 
       val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
-      parseGeneralFile(generalFile, city, country) ~> zip.in0
-      parseReviewsFile(reviewsFile) ~> zip.in1
+      parseGeneralFile(doc.generalFile, doc.city, doc.country) ~> zip.in0
+      parseReviewsFile(doc.reviewFile) ~> zip.in1
 
       zip.out
     } map { case (unratedHostelMetaData, unratedReviewsMetaData) =>

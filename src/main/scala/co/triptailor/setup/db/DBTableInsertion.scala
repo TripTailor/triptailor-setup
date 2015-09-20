@@ -25,10 +25,10 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
 
   def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
     for {
-      reviewIds   ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
       serviceIds  ← Future.sequence(document.info.services.map(idempotentInsertService))
-      _           = insertHostelAttributes(hostelId, document.reviews, reviewIds)
       _           = insertHostelServices(hostelId, serviceIds)
+      reviewIds   ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
+      _           = insertHostelAttributes(hostelId, document.reviews, reviewIds)
     } yield hostelId
 
   private def insertHostelAttributes(hostelId: Int, reviews: Seq[RatedReview], reviewIds: Seq[Int]) =
