@@ -28,11 +28,11 @@ trait NLPAnalysisService extends NLPConfig {
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
 
-  def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
-    val props = new Properties
-    props.setProperty("annotators", annotators)
+  val props = new Properties
+  props.setProperty("annotators", annotators)
+  val pipeline = new StanfordCoreNLP(props)
 
-    val pipeline      = new StanfordCoreNLP(props)
+  def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
     val unratedReview = new Annotation(reviewData.text)
 
     Future {
