@@ -111,9 +111,8 @@ trait NLPAnalysisService extends NLPConfig {
 
   private def calculateSentenceMetrics(sentence: AnnotatedSentence, reviewYear: Double) =
     sentence.tokens.map { token =>
-      val nbrAnnotatedTokens = token.positions.size
       val timeModifier = 1 / math.log(baseYear - reviewYear + 2)
-      token.attribute -> RatingMetrics(sentiment = sentence.sentiment * nbrAnnotatedTokens, freq = nbrAnnotatedTokens, cfreq = timeModifier * nbrAnnotatedTokens)
+      token.attribute -> RatingMetrics(sentiment = sentence.sentiment, freq = 1, cfreq = timeModifier * 1)
     }.toMap
 
 }
