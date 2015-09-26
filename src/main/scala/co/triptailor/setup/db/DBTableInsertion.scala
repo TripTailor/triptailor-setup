@@ -28,12 +28,12 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
       serviceIds  ← Future.sequence(document.info.services.map(idempotentInsertService))
       _           = insertHostelServices(hostelId, serviceIds)
       reviewIds   ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
-      _           = insertHostelAttributes(hostelId, document.reviews, reviewIds)
+      _           = insertHostelAttributes(hostelId, document, reviewIds)
     } yield hostelId
 
-  private def insertHostelAttributes(hostelId: Int, reviews: Seq[RatedReview], reviewIds: Seq[Int]) =
-    reviews zip reviewIds foreach { case (review, reviewId) =>
-      val ratingMetrics = review.metrics
+  private def insertHostelAttributes(hostelId: Int, document: RatedDocument, reviewIds: Seq[Int]) =
+    document.reviews zip reviewIds foreach { case (review, reviewId) =>
+      val ratingMetrics = document.metrics
       val tokens        = review.tokens
 
       tokens foreach { token =>

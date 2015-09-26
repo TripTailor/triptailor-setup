@@ -2,8 +2,6 @@ package co.triptailor.setup.domain
 
 import java.io.File
 
-case class DocumentEntry(city: String, country: String, generalFile: File, reviewFile: File)
-
 object FileParser {
   lazy val data = new File("./data")
 

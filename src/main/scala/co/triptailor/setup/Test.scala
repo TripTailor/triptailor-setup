@@ -23,24 +23,37 @@ object Test extends NLPAnalysisService {
     val parser       = new UnratedDocumentParser
     implicit val dao = new DBTableInsertion
 
-    Source(FileParser.documentEntries.toVector).take(20).map(parser.parse)
-     .flatten(FlattenStrategy.concat).map(sourceFromUnratedReviews(_, parallelism)).flatten(FlattenStrategy.concat)
+    Source(FileParser.documentEntries.toVector).drop(172).take(28).map(parser.parse)
+     .flatten(FlattenStrategy.concat)
+     .map(sourceFromUnratedReviews(_, parallelism))
+     .flatten(FlattenStrategy.concat)
      .runForeach(println) onComplete {
-      case Success(v) => println("Done inserting dependencies"); system.shutdown()
-      case Failure(e) => println(e.getClass); println(e.getMessage); println(e.getStackTrace.mkString("\n")); system.shutdown()
-    }
+       case Success(v) =>
+         println("Done inserting dependencies"); system.shutdown()
+       case Failure(e) =>
+         println(e.getClass); println(e.getMessage); println(e.getStackTrace.mkString("\n"))
+         system.shutdown()
+     }
 
   }
 
-  private def sourceFromUnratedReviews(unratedDocument: UnratedDocument, parallelism: Int)(implicit dao: DBTableInsertion, mat: ActorMaterializer) =
+  private def sourceFromUnratedReviews(unratedDocument: UnratedDocument, parallelism: Int)
+                                      (implicit dao: DBTableInsertion, mat: ActorMaterializer) =
     if (unratedDocument.reviewData.isEmpty)
-      Source(dao.addHostelDependencies(RatedDocument(Seq.empty, unratedDocument.info))).map(Future.successful)
+      Source(dao.addHostelDependencies(RatedDocument(Seq.empty, Map.empty, unratedDocument.info)))
+        .map { hostelId =>
+          println(s"Done inserting hostel info for ${unratedDocument.info.name} with hostel_id=$hostelId")
+          hostelId
+        }.map(Future.successful)
     else
       Source(unratedDocument.reviewData.toVector).mapAsyncUnordered(parallelism)(rateReview)
         .grouped(Int.MaxValue).map { ratedReviews =>
 
-        dao.addHostelDependencies(RatedDocument(ratedReviews, unratedDocument.info))
-
+        val metrics = ratedReviews.map(_.metrics).reduce(mergeMetrics)
+        dao.addHostelDependencies(RatedDocument(ratedReviews, metrics, unratedDocument.info)).map { hostelId =>
+          println(s"Done inserting hostel info for ${unratedDocument.info.name} with hostel_id=$hostelId")
+          hostelId
+        }
       }
 
   def config: Config = ConfigFactory.load("nlp")

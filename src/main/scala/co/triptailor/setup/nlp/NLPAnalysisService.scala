@@ -43,9 +43,28 @@ trait NLPAnalysisService extends NLPConfig {
         val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse baseYear)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
-        val metrics = ratedSentences.map(_.metrics).reduce(mergeMetrics)
+        val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
         RatedReview(reviewData.text, tokens, metrics)
       }
+    }
+  }
+
+  protected def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
+    val (lMetrics, rMetrics) =
+      if (leftMetrics.size > rightMetrics.size)
+        (leftMetrics, rightMetrics)
+      else
+        (rightMetrics, leftMetrics)
+
+    rMetrics.keysIterator.foldLeft(lMetrics) { (metrics, token) =>
+      val rightMetrics = rMetrics(token)
+      val leftMetrics  = lMetrics.getOrElse(token, RatingMetrics(0, 0, 0))
+      val updatedMetrics = leftMetrics.copy(
+        sentiment = leftMetrics.sentiment + rightMetrics.sentiment,
+        freq      = leftMetrics.freq      + rightMetrics.freq,
+        cfreq     = leftMetrics.cfreq     + rightMetrics.cfreq
+      )
+      metrics + (token -> updatedMetrics)
     }
   }
 
@@ -89,25 +108,6 @@ trait NLPAnalysisService extends NLPConfig {
       start = token.beginPosition()
       end   = token.endPosition()
     } yield AnnotatedToken(lemma, Position(start, end))
-
-  private def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
-    val (lMetrics, rMetrics) =
-      if (leftMetrics.size > rightMetrics.size)
-        (leftMetrics, rightMetrics)
-      else
-        (rightMetrics, leftMetrics)
-
-    rMetrics.keysIterator.foldLeft(lMetrics) { (metrics, token) =>
-      val rightMetrics = rMetrics(token)
-      val leftMetrics  = lMetrics.getOrElse(token, RatingMetrics(0, 0, 0))
-      val updatedMetrics = leftMetrics.copy(
-        sentiment = leftMetrics.sentiment + rightMetrics.sentiment,
-        freq      = leftMetrics.freq      + rightMetrics.freq,
-        cfreq     = leftMetrics.cfreq     + rightMetrics.cfreq
-      )
-      metrics + (token -> updatedMetrics)
-    }
-  }
 
   private def calculateSentenceMetrics(sentence: AnnotatedSentence, reviewYear: Double) =
     sentence.tokens.map { token =>

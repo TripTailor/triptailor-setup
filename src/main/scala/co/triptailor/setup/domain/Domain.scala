@@ -1,5 +1,7 @@
 package co.triptailor.setup.domain
 
+import java.io.File
+
 import org.joda.time.DateTime
 
 object Sentiment {
@@ -19,6 +21,8 @@ object Sentiment {
     }
 }
 
+case class DocumentEntry(city: String, country: String, generalFile: File, reviewFile: File)
+
 case class HostelMetaData(name: String, city: String, country: String, hoscars: Int, services: Seq[String])
 case class UnratedReview(text: String, date: Option[DateTime])
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
@@ -34,4 +38,4 @@ case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken]
 
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
 case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics])
-case class RatedDocument(reviews: Seq[RatedReview], info: HostelMetaData)
+case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics], info: HostelMetaData)
