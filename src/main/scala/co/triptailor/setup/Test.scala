@@ -23,15 +23,18 @@ object Test extends NLPAnalysisService {
     val parser       = new UnratedDocumentParser
     implicit val dao = new DBTableInsertion
 
-    Source(FileParser.documentEntries.toVector).drop(172).take(28).map(parser.parse)
+    Source(FileParser.documentEntries.toVector).filter(d => d.city == "Monterrey" && d.country == "Mexico").map(parser.parse)
      .flatten(FlattenStrategy.concat)
      .map(sourceFromUnratedReviews(_, parallelism))
      .flatten(FlattenStrategy.concat)
      .runForeach(println) onComplete {
        case Success(v) =>
-         println("Done inserting dependencies"); system.shutdown()
+         println("Done inserting dependencies")
+         system.shutdown()
        case Failure(e) =>
-         println(e.getClass); println(e.getMessage); println(e.getStackTrace.mkString("\n"))
+         println(e.getClass)
+         println(e.getMessage)
+         println(e.getStackTrace.mkString("\n"))
          system.shutdown()
      }
 
@@ -47,7 +50,7 @@ object Test extends NLPAnalysisService {
         }.map(Future.successful)
     else
       Source(unratedDocument.reviewData.toVector).mapAsyncUnordered(parallelism)(rateReview)
-        .grouped(Int.MaxValue).map { ratedReviews =>
+        .grouped(Int.MaxValue).mapAsync(parallelism = 1) { ratedReviews =>
 
         val metrics = ratedReviews.map(_.metrics).reduce(mergeMetrics)
         dao.addHostelDependencies(RatedDocument(ratedReviews, metrics, unratedDocument.info)).map { hostelId =>

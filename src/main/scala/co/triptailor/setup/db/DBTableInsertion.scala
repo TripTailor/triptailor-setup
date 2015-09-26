@@ -1,6 +1,6 @@
 package co.triptailor.setup.db
 
-import co.triptailor.setup.domain.{RatedDocument, RatedReview}
+import co.triptailor.setup.domain.{RatingMetrics, RatedDocument, RatedReview}
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 import slick.driver.PostgresDriver.api._
@@ -11,39 +11,44 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   import DBTableInsertion._
   import db.Tables._
 
-  def addHostelDependencies(document: RatedDocument) = {
-    val info = document.info
+  def addHostelDependencies(document: RatedDocument) =
     for {
-      locationId ← idempotentInsertLocation(info.city, info.country)
-      hostelId   ← insertHostelInfo(info.name, document.reviews.size, locationId)
+      locationId ← idempotentInsertLocation(document.info.city, document.info.country)
+      hostelId   ← insertHostelInfo(document.info.name, document.reviews.size, locationId)
       _          ← insertHostelDependencies(document, hostelId)
     } yield hostelId
-  }
 
-  def insertHostelInfo(name: String, noReviews: Int, locationId: Int): Future[Int] =
+  private def insertHostelInfo(name: String, noReviews: Int, locationId: Int): Future[Int] =
     triptailorDB.run(insertHostelInfoQuery(name, noReviews, locationId))
 
-  def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
+  private def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
     for {
-      serviceIds  ← Future.sequence(document.info.services.map(idempotentInsertService))
-      _           = insertHostelServices(hostelId, serviceIds)
-      reviewIds   ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
-      _           = insertHostelAttributes(hostelId, document, reviewIds)
+      serviceIds ← Future.sequence(document.info.services.map(idempotentInsertService))
+      _          ← insertHostelServices(hostelId, serviceIds)
+      reviewIds  ← Future.sequence(document.reviews.map(_.text).map(text => triptailorDB.run(insertReviewQuery(hostelId, text))))
+      _          ← insertAttributeReviews(hostelId, document.reviews, reviewIds)
+      _          ← insertHostelAttributes(hostelId, document.metrics)
     } yield hostelId
 
-  private def insertHostelAttributes(hostelId: Int, document: RatedDocument, reviewIds: Seq[Int]) =
-    document.reviews zip reviewIds foreach { case (review, reviewId) =>
-      val ratingMetrics = document.metrics
-      val tokens        = review.tokens
+  private def insertAttributeReviews(hostelId: Int, reviews: Seq[RatedReview], reviewIds: Seq[Int]) =
+    Future.sequence {
+      reviews zip reviewIds flatMap { case (review, reviewId) =>
+        val tokens = review.tokens
+        tokens map { token =>
+          idempotentInsertAttribute(token.attribute) map { aid =>
+            val tokenPositions = token.positions.mkString(",")
+            triptailorDB.run(insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId, tokenPositions)))
+          }
+        }
+      }
+    }
 
-      tokens foreach { token =>
-        idempotentInsertAttribute(token.attribute).map { aid =>
-          val tokenPositions = token.positions.mkString(",")
-          val metrics        = ratingMetrics(token.attribute)
-          triptailorDB.run(DBIO.seq(
-            insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId, tokenPositions)),
-            insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, metrics.freq, metrics.cfreq, metrics.sentiment))
-          ))
+  private def insertHostelAttributes(hostelId: Int, metrics: Map[String,RatingMetrics]) =
+    Future.sequence {
+      metrics.keySet map { attribute =>
+        idempotentInsertAttribute(attribute) map { aid =>
+          val m = metrics(attribute)
+          triptailorDB.run(insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, m.freq, m.cfreq, m.sentiment)))
         }
       }
     }
