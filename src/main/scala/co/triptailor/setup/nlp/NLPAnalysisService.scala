@@ -40,7 +40,7 @@ trait NLPAnalysisService extends NLPConfig {
         pipeline.annotate(unratedReview)
 
         val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
-        val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse baseYear)
+        val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse 2011d)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
@@ -56,15 +56,15 @@ trait NLPAnalysisService extends NLPConfig {
       else
         (rightMetrics, leftMetrics)
 
-    rMetrics.keysIterator.foldLeft(lMetrics) { (metrics, token) =>
-      val rightMetrics = rMetrics(token)
-      val leftMetrics  = lMetrics.getOrElse(token, RatingMetrics(0, 0, 0))
+    rMetrics.keysIterator.foldLeft(lMetrics) { (metrics, attribute) =>
+      val rightMetrics = rMetrics(attribute)
+      val leftMetrics  = lMetrics.getOrElse(attribute, RatingMetrics(0, 0, 0))
       val updatedMetrics = leftMetrics.copy(
         sentiment = leftMetrics.sentiment + rightMetrics.sentiment,
         freq      = leftMetrics.freq      + rightMetrics.freq,
         cfreq     = leftMetrics.cfreq     + rightMetrics.cfreq
       )
-      metrics + (token -> updatedMetrics)
+      metrics.updated(attribute, updatedMetrics)
     }
   }
 
@@ -74,9 +74,9 @@ trait NLPAnalysisService extends NLPConfig {
       tree               = sentence.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
       sentiment          = RNNCoreAnnotations.getPredictedClass(tree)
       tokens             = buildAnnotatedTokens(sentence.get(classOf[TokensAnnotation]).asScala)
-      positionedSentence = AnnotatedSentence(sentence.toString, createAnnotatedPositionedTokens(tokens), Sentiment(sentiment))
-      metrics            = calculateSentenceMetrics(positionedSentence, reviewYear)
-    } yield RatedSentence(positionedSentence, metrics)
+      annotatedSentence  = AnnotatedSentence(sentence.toString, createAnnotatedPositionedTokens(tokens), Sentiment(sentiment))
+      metrics            = calculateSentenceMetrics(annotatedSentence, reviewYear)
+    } yield RatedSentence(annotatedSentence, metrics)
 
   private def mergeAnnotatedPositionedTokens(tokens: Seq[AnnotatedPositionedToken]) =
     tokens.foldLeft(Map.empty[String, AnnotatedPositionedToken]) {
@@ -89,16 +89,6 @@ trait NLPAnalysisService extends NLPConfig {
         }
     }.values.toSeq
 
-  private def createAnnotatedPositionedTokens(tokens: Seq[AnnotatedToken]): Seq[AnnotatedPositionedToken] = {
-    def mergeTokens(positionedToken: AnnotatedPositionedToken, token: AnnotatedToken) =
-      positionedToken.copy(positions = positionedToken.positions :+ token.position)
-
-    def buildAnnotatedPositionedToken(values: Seq[AnnotatedToken]) =
-      values.drop(1).foldLeft(AnnotatedPositionedToken(values.head.attribute, Seq(values.head.position)))(mergeTokens)
-
-    tokens.groupBy(_.attribute).values.map(buildAnnotatedPositionedToken).toSeq
-  }
-
   private def buildAnnotatedTokens(tokens: Seq[CoreLabel]): Seq[AnnotatedToken] =
     for {
       token ← tokens
@@ -109,10 +99,20 @@ trait NLPAnalysisService extends NLPConfig {
       end   = token.endPosition()
     } yield AnnotatedToken(lemma, Position(start, end))
 
+  private def createAnnotatedPositionedTokens(tokens: Seq[AnnotatedToken]): Seq[AnnotatedPositionedToken] = {
+    def mergeTokens(positionedToken: AnnotatedPositionedToken, token: AnnotatedToken) =
+      positionedToken.copy(positions = positionedToken.positions :+ token.position)
+
+    def buildAnnotatedPositionedToken(values: Seq[AnnotatedToken]) =
+      values.drop(1).foldLeft(AnnotatedPositionedToken(values.head.attribute, Seq(values.head.position)))(mergeTokens)
+
+    tokens.groupBy(_.attribute).values.map(buildAnnotatedPositionedToken).toSeq
+  }
+
   private def calculateSentenceMetrics(sentence: AnnotatedSentence, reviewYear: Double) =
     sentence.tokens.map { token =>
-      val timeModifier = 1 / math.log(baseYear - reviewYear + 2)
-      token.attribute -> RatingMetrics(sentiment = sentence.sentiment, freq = 1, cfreq = timeModifier * 1)
+      val timeModifier = 1 / math.log(baseYear - reviewYear)
+      token.attribute -> RatingMetrics(freq = 1, cfreq = timeModifier, sentiment = sentence.sentiment)
     }.toMap
 
 }
