@@ -1,5 +1,8 @@
 \c triptailor
 
+ALTER TABLE "attribute"
+  ALTER COLUMN name TYPE varchar(200);
+
 CREATE TABLE IF NOT EXISTS "review" (
   "id" SERIAL NOT NULL,
   "hostel_id" integer NOT NULL,
