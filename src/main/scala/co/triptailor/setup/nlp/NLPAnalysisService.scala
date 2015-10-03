@@ -40,7 +40,7 @@ trait NLPAnalysisService extends NLPConfig {
         pipeline.annotate(unratedReview)
 
         val unratedSentences = unratedReview.get(classOf[SentencesAnnotation]).asScala
-        val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse 2011d)
+        val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse 2000d)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
