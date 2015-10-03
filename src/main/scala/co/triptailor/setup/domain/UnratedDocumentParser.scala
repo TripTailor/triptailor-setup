@@ -32,7 +32,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
       map(_.utf8String).
       grouped(2).
       map { case Seq(meta, text) =>
-        UnratedReview(text, parseDate(meta))
+        UnratedReview(text, parseDate(meta), parseReviewMetaData(meta))
       }.fold(Seq.empty[UnratedReview]) { case (acc, unratedReviewMetaData) =>
         unratedReviewMetaData +: acc
       }
@@ -57,9 +57,19 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
       case Date(day, month, year) => Some(dateFormat.parseDateTime(s"$day $month $year"))
       case _ => None
     }
+
+  private def parseReviewMetaData(line: String) =
+    line match {
+      case ReviewerMetaData(name, city, gender, age) =>
+        ReviewMetaData(Some(name).filter(_.nonEmpty), Some(city).filter(_.nonEmpty), Some(gender).filter(_.nonEmpty), Some(age).filter(_.nonEmpty).map(_.toInt))
+      case _ =>
+        ReviewMetaData(None, None, None, None)
+    }
 }
 
 object UnratedDocumentParser {
   val dateFormat = DateTimeFormat.forPattern("dd MMM yyyy")
-  val Date = """^[^,]+,(\d{1,2}).*?([A-Za-z]{3}).*?(\d{4}).*?$""".r
+
+  val Date             = """^[^,]+,(\d{1,2}).*?([A-Za-z]{3}).*?(\d{4}).*?$""".r
+  val ReviewerMetaData = """^[^,]+,[^,]+,([^,]*),([^,]*),([^,]*),(\d*).*?$""".r
 }

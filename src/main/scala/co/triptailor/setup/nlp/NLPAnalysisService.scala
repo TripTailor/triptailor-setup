@@ -44,7 +44,7 @@ trait NLPAnalysisService extends NLPConfig {
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
-        RatedReview(reviewData.text, tokens, metrics)
+        RatedReview(reviewData.text, tokens, metrics, reviewData.date, reviewData.meta)
       }
     }
   }

@@ -23,8 +23,9 @@ object Sentiment {
 
 case class DocumentEntry(city: String, country: String, generalFile: File, reviewFile: File)
 
+case class ReviewMetaData(reviewer: Option[String], city: Option[String], gender: Option[String], age: Option[Int])
 case class HostelMetaData(name: String, city: String, country: String, hoscars: Int, services: Seq[String])
-case class UnratedReview(text: String, date: Option[DateTime])
+case class UnratedReview(text: String, date: Option[DateTime], meta: ReviewMetaData)
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
@@ -37,5 +38,5 @@ case class AnnotatedPositionedToken(attribute: String, positions: Seq[Position])
 case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken], sentiment: Int)
 
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
-case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics])
+case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics], date: Option[DateTime], meta: ReviewMetaData)
 case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics], info: HostelMetaData)

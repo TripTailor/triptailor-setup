@@ -6,7 +6,12 @@ ALTER TABLE "attribute"
 CREATE TABLE IF NOT EXISTS "review" (
   "id" SERIAL NOT NULL,
   "hostel_id" integer NOT NULL,
-  "text" text NOT NULL
+  "text" text NOT NULL,
+  "year" date,
+  "reviewer" varchar(200),
+  "city" varchar(200),
+  "gender" varchar(10),
+  "age" integer
 );
 
 CREATE TABLE IF NOT EXISTS "attribute_review" (
