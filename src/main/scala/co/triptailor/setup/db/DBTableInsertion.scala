@@ -42,7 +42,7 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   private def insertHostelAttributesQueries(hostelId: Int, metrics: Map[String, RatingMetrics]) =
     for {
       attribute ← metrics.keys
-    } yield idempotentInsertAttributeQuery(attribute) map { aid =>
+    } yield idempotentInsertAttributeQuery(attribute) flatMap { aid =>
       val m = metrics(attribute)
       insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, m.freq, m.cfreq, m.sentiment))
     }
