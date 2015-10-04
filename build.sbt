@@ -42,3 +42,5 @@ libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencie
   nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
 
 initialCommands in console := """ammonite.repl.Repl.main(Array())"""
+
+enablePlugins(JavaAppPackaging)
