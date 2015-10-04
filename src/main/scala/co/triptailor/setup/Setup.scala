@@ -12,31 +12,32 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-// TODO: Need to retry reviews that get `java.lang.OutOfMemoryError` errors
-object Test extends NLPAnalysisService {
+object Setup extends NLPAnalysisService {
 
   def main(args: Array[String]): Unit = {
     val parallelism = Runtime.getRuntime.availableProcessors() + 1
-    implicit val system = ActorSystem("nlp-test")
-    implicit val mat    = ActorMaterializer()
 
-    val parser       = new UnratedDocumentParser
+    implicit val system = ActorSystem("nlp-test")
+    implicit val mat = ActorMaterializer()
     implicit val dao = new DBTableInsertion
 
-    Source(FileParser.documentEntries.toVector).filter(d => d.city == "Monterrey" && d.country == "Mexico").map(parser.parse)
-     .flatten(FlattenStrategy.concat)
-     .map(sourceFromUnratedReviews(_, parallelism))
-     .flatten(FlattenStrategy.concat)
-     .runForeach(println) onComplete {
-       case Success(v) =>
-         println("Done inserting dependencies")
-         system.shutdown()
-       case Failure(e) =>
-         println(e.getClass)
-         println(e.getMessage)
-         println(e.getStackTrace.mkString("\n"))
-         system.shutdown()
-     }
+    val parser = new UnratedDocumentParser
+
+    Source(FileParser.documentEntries.toVector)
+      .map(parser.parse)
+      .flatten(FlattenStrategy.concat)
+      .map(sourceFromUnratedReviews(_, parallelism))
+      .flatten(FlattenStrategy.concat)
+      .runForeach(println) onComplete {
+        case Success(v) =>
+          println("Done inserting dependencies")
+          system.shutdown()
+        case Failure(e) =>
+          println(e.getClass)
+          println(e.getMessage)
+          println(e.getStackTrace.mkString("\n"))
+          system.shutdown()
+      }
 
   }
 
@@ -50,7 +51,7 @@ object Test extends NLPAnalysisService {
         }.map(Future.successful)
     else
       Source(unratedDocument.reviewData.toVector).mapAsyncUnordered(parallelism)(rateReview)
-        .grouped(Int.MaxValue).mapAsync(parallelism = 1) { ratedReviews =>
+        .grouped(Int.MaxValue).mapAsync(parallelism = 4) { ratedReviews =>
 
         val metrics = ratedReviews.map(_.metrics).reduce(mergeMetrics)
         dao.addHostelDependencies(RatedDocument(ratedReviews, metrics, unratedDocument.info)).map { hostelId =>
