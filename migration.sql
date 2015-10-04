@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS "review" (
   "year" date,
   "reviewer" varchar(200),
   "city" varchar(200),
-  "gender" varchar(10),
+  "gender" varchar(100),
   "age" integer
 );
 
