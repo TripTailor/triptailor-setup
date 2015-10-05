@@ -13,7 +13,6 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 object Setup extends NLPAnalysisService {
-
   def main(args: Array[String]): Unit = {
     val parallelism = Runtime.getRuntime.availableProcessors() + 1
 
@@ -24,6 +23,7 @@ object Setup extends NLPAnalysisService {
     val parser = new UnratedDocumentParser
 
     Source(FileParser.documentEntries.toVector)
+      .dropWhile(_.generalFile.getName != (startEntry + "_general.txt"))
       .map(parser.parse)
       .flatten(FlattenStrategy.concat)
       .map(sourceFromUnratedReviews(_, parallelism))

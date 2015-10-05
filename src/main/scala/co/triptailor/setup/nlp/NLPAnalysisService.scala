@@ -21,12 +21,14 @@ trait NLPConfig {
   def baseYear: Int
   def annotators: String
   def stopWords: Set[String]
+  def startEntry: String
 }
 
 trait NLPAnalysisService extends NLPConfig {
   val baseYear   = config.getInt("nlp.baseYear")
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
+  val startEntry = config.getString("nlp.startEntry")
 
   val props = new Properties
   props.setProperty("annotators", annotators)
