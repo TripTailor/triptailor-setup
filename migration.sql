@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS "review" (
   "reviewer" varchar(200),
   "city" varchar(200),
   "gender" varchar(100),
-  "age" integer
+  "age" integer,
+  PRIMARY KEY(id)
 );
 
 CREATE TABLE IF NOT EXISTS "attribute_review" (
