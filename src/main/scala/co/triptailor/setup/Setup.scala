@@ -49,7 +49,7 @@ object Setup extends NLPAnalysisService {
         }.map(Future.successful)
     else
       Source(unratedDocument.reviewData.toVector).mapAsyncUnordered(parallelism)(rateReview)
-        .grouped(Int.MaxValue).mapAsync(parallelism = 4) { ratedReviews =>
+        .grouped(Int.MaxValue).mapAsync(parallelism = 1) { ratedReviews =>
 
         val metrics = ratedReviews.map(_.metrics).reduce(mergeMetrics)
         dao.addHostelDependencies(RatedDocument(ratedReviews, metrics, unratedDocument.info)).map { hostelId =>
