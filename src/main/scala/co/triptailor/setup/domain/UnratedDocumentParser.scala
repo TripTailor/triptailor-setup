@@ -4,8 +4,8 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.ActorMaterializer
-import akka.stream.io.{Framing, SynchronousFileSource}
+import akka.stream.{SourceShape, ActorMaterializer}
+import akka.stream.io.Framing
 import akka.stream.scaladsl.{FlowGraph, Source, Zip}
 import akka.util.ByteString
 import org.joda.time.format.DateTimeFormat
@@ -14,24 +14,25 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
   import UnratedDocumentParser._
 
   def parse(doc: DocumentEntry): Source[UnratedDocument, Unit] =
-    Source() { implicit b =>
+    Source.fromGraph(FlowGraph.create() { implicit b =>
       import FlowGraph.Implicits._
 
       val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
+
       parseGeneralFile(doc.generalFile, doc.city, doc.country) ~> zip.in0
       parseReviewsFile(doc.reviewFile) ~> zip.in1
 
-      zip.out
-    } map { case (unratedHostelMetaData, unratedReviewsMetaData) =>
+      SourceShape(zip.out)
+    }).map { case (unratedHostelMetaData, unratedReviewsMetaData) =>
       UnratedDocument(unratedReviewsMetaData, unratedHostelMetaData)
     }
 
   def parseReviewsFile(file: File) =
-    SynchronousFileSource(file).
-      via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true)).
-      map(_.utf8String).
-      grouped(2).
-      map { case Seq(meta, text) =>
+    Source.file(file)
+      .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
+      .map(_.utf8String)
+      .grouped(2)
+      .map { case Seq(meta, text) =>
         UnratedReview(text, parseDate(meta), parseReviewMetaData(meta))
       }.fold(Seq.empty[UnratedReview]) { case (acc, unratedReviewMetaData) =>
         unratedReviewMetaData +: acc

@@ -2,7 +2,7 @@ package co.triptailor.setup
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{FlattenStrategy, Source}
+import akka.stream.scaladsl.Source
 import co.triptailor.setup.db.DBTableInsertion
 import co.triptailor.setup.domain._
 import co.triptailor.setup.nlp.NLPAnalysisService
@@ -24,19 +24,17 @@ object Setup extends NLPAnalysisService {
 
     Source(FileParser.documentEntries.toVector)
       .dropWhile(_.generalFile.getName != (startEntry + "_general.txt"))
-      .map(parser.parse)
-      .flatten(FlattenStrategy.concat)
-      .map(sourceFromUnratedReviews(_, parallelism))
-      .flatten(FlattenStrategy.concat)
+      .flatMapConcat(parser.parse)
+      .flatMapConcat(sourceFromUnratedReviews(_, parallelism))
       .runForeach(println) onComplete {
         case Success(v) =>
           println("Done inserting dependencies")
-          system.shutdown()
+          system.terminate()
         case Failure(e) =>
           println(e.getClass)
           println(e.getMessage)
           println(e.getStackTrace.mkString("\n"))
-          system.shutdown()
+          system.terminate()
       }
 
   }

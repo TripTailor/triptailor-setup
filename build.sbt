@@ -4,8 +4,8 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-val akkaVersion        = "2.3.12"
-val akkaStreamsVersion = "1.0"
+val akkaVersion        = "2.4.1"
+val akkaStreamsVersion = "2.0-M2"
 
 val utilityDependencies = Seq(
   "org.joda" % "joda-convert" % "1.7"
