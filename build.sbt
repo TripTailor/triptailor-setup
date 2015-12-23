@@ -5,7 +5,7 @@ version := "1.0"
 scalaVersion := "2.11.7"
 
 val akkaVersion        = "2.4.1"
-val akkaStreamsVersion = "2.0"
+val akkaStreamsVersion = "2.0.1"
 val ammoniteVersion    = "0.5.2"
 
 val utilityDependencies = Seq(
