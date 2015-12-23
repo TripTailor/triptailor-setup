@@ -5,7 +5,8 @@ version := "1.0"
 scalaVersion := "2.11.7"
 
 val akkaVersion        = "2.4.1"
-val akkaStreamsVersion = "2.0-M2"
+val akkaStreamsVersion = "2.0"
+val ammoniteVersion    = "0.5.2"
 
 val utilityDependencies = Seq(
   "org.joda" % "joda-convert" % "1.7"
@@ -35,12 +36,12 @@ val testDependencies = Seq(
 )
 
 val ammoniteRepl = Seq(
-  "com.lihaoyi" % "ammonite-repl" % "0.4.5" cross CrossVersion.full
+  "com.lihaoyi" % "ammonite-repl" % ammoniteVersion cross CrossVersion.full
 )
 
 libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencies ++
   nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
 
-initialCommands in console := """ammonite.repl.Repl.main(Array())"""
+initialCommands in console := """ammonite.repl.Main.run("")"""
 
 enablePlugins(JavaAppPackaging)

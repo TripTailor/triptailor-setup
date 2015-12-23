@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.{SourceShape, ActorMaterializer}
 import akka.stream.io.Framing
-import akka.stream.scaladsl.{FlowGraph, Source, Zip}
+import akka.stream.scaladsl.{RunnableGraph, GraphDSL, Source, FileIO, Zip}
 import akka.util.ByteString
 import org.joda.time.format.DateTimeFormat
 
@@ -14,8 +14,8 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
   import UnratedDocumentParser._
 
   def parse(doc: DocumentEntry): Source[UnratedDocument, Unit] =
-    Source.fromGraph(FlowGraph.create() { implicit b =>
-      import FlowGraph.Implicits._
+    Source.fromGraph(GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
 
       val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
 
@@ -28,7 +28,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     }
 
   def parseReviewsFile(file: File) =
-    Source.file(file)
+    FileIO.fromFile(file)
       .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
       .map(_.utf8String)
       .grouped(2)
@@ -50,7 +50,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val services   = lines.take(noServices).toSeq
 
     val metaData = HostelMetaData(hostelName, city, country, hoscars, services)
-    Source(FastFuture.successful[HostelMetaData](metaData))
+    Source.fromFuture(FastFuture.successful[HostelMetaData](metaData))
   }
 
   private def parseDate(line: String) =

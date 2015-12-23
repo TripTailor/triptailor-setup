@@ -42,7 +42,7 @@ object Setup extends NLPAnalysisService {
   private def sourceFromUnratedReviews(unratedDocument: UnratedDocument, parallelism: Int)
                                       (implicit dao: DBTableInsertion, mat: ActorMaterializer) =
     if (unratedDocument.reviewData.isEmpty)
-      Source(dao.addHostelDependencies(RatedDocument(Seq.empty, Map.empty, unratedDocument.info)))
+      Source.fromFuture(dao.addHostelDependencies(RatedDocument(Seq.empty, Map.empty, unratedDocument.info)))
         .map { hostelId =>
           println(s"Done inserting hostel info for ${unratedDocument.info.name} with hostel_id=$hostelId")
           hostelId
