@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 
 object Setup extends NLPAnalysisService {
   def main(args: Array[String]): Unit = {
-    val parallelism = Runtime.getRuntime.availableProcessors() + 1
+    val parallelism = 2
 
     implicit val system = ActorSystem("nlp-test")
     implicit val mat = ActorMaterializer()
@@ -43,7 +43,7 @@ object Setup extends NLPAnalysisService {
 
   private def sourceFromUnratedReviews(unratedDocument: UnratedDocument, parallelism: Int)
                                       (implicit dao: DBTableInsertion, mat: ActorMaterializer) =
-    if (unratedDocument.reviewData.isEmpty)
+    if (unratedDocument.reviewData.size < 10)
       Source(dao.addHostelDependencies(RatedDocument(Seq.empty, Map.empty, unratedDocument.info)))
         .map { hostelId =>
           println(s"Done inserting hostel info for ${unratedDocument.info.name} with hostel_id=$hostelId")

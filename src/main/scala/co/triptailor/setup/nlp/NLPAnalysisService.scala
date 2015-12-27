@@ -2,7 +2,6 @@ package co.triptailor.setup.nlp
 
 import java.util.Properties
 import java.util.stream.Collectors
-
 import co.triptailor.setup.domain._
 import com.typesafe.config.Config
 import edu.stanford.nlp.dcoref.CoNLL2011DocumentReader.NamedEntityAnnotation
@@ -12,9 +11,9 @@ import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.util.CoreMap
-
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.io.Source
 
 trait NLPConfig {
   def config: Config
@@ -33,6 +32,8 @@ trait NLPAnalysisService extends NLPConfig {
   val props = new Properties
   props.setProperty("annotators", annotators)
   val pipeline = new StanfordCoreNLP(props)
+  
+  val dictionary = Source.fromFile("words").getLines.map((_, null)).toMap
 
   def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
     val unratedReview = new Annotation(reviewData.text)
@@ -75,6 +76,7 @@ trait NLPAnalysisService extends NLPConfig {
       sentence           ← sentences
       tree               = sentence.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
       sentiment          = RNNCoreAnnotations.getPredictedClass(tree)
+      if(sentiment > 1)
       tokens             = buildAnnotatedTokens(sentence.get(classOf[TokensAnnotation]).asScala)
       annotatedSentence  = AnnotatedSentence(sentence.toString, createAnnotatedPositionedTokens(tokens), Sentiment(sentiment))
       metrics            = calculateSentenceMetrics(annotatedSentence, reviewYear)
@@ -94,7 +96,7 @@ trait NLPAnalysisService extends NLPConfig {
   private def buildAnnotatedTokens(tokens: Seq[CoreLabel]): Seq[AnnotatedToken] =
     for {
       token ← tokens
-      lemma = token.get(classOf[LemmaAnnotation]) if !(stopWords contains lemma) && !(lemma matches ".*?[^a-zA-Z-]+.*?")
+      lemma = token.get(classOf[LemmaAnnotation]) if !(stopWords contains lemma) && (dictionary contains lemma) && !(lemma matches ".*?[^a-zA-Z-]+.*?")
       pos   = token.get(classOf[PartOfSpeechAnnotation]) if pos.equals("NN") || pos.equals("NNS") || pos.equals("JJ")
       ne    = token.get(classOf[NamedEntityAnnotation])
       start = token.beginPosition()

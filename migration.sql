@@ -1,4 +1,4 @@
-\c triptailor
+\c triptailor_restaurants
 
 ALTER TABLE "attribute"
   ALTER COLUMN name TYPE varchar(200);
