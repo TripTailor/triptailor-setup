@@ -7,6 +7,7 @@ scalaVersion := "2.11.7"
 val akkaVersion        = "2.4.1"
 val akkaStreamsVersion = "2.0.1"
 val ammoniteVersion    = "0.5.2"
+val slickVersion       = "3.1.1"
 
 val utilityDependencies = Seq(
   "org.joda" % "joda-convert" % "1.7"
@@ -14,8 +15,9 @@ val utilityDependencies = Seq(
 
 val dbDependencies = Seq(
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-  "com.typesafe.slick" %% "slick" % "3.0.3",
-  "com.typesafe.slick" %% "slick-codegen" % "3.0.3",
+  "com.typesafe.slick" %% "slick" % slickVersion,
+  "com.typesafe.slick" %% "slick-codegen" % slickVersion,
+  "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
   "com.zaxxer" % "HikariCP" % "2.3.5" % Compile
 )
 
