@@ -16,12 +16,9 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   def addHostelDependencies(document: RatedDocument) =
     for {
       locationId ← triptailorDB.run(idempotentInsertLocationQuery(document.info.city, document.info.country))
-      hostelId   ← insertHostelInfo(document.info.name, document.reviews.size, locationId)
+      hostelId   ← triptailorDB.run(idempotentInsertHostelQuery(document.info.name, document.reviews.size, locationId))
       _          ← insertHostelDependencies(document, hostelId)
     } yield hostelId
-
-  private def insertHostelInfo(name: String, noReviews: Int, locationId: Int): Future[Int] =
-    triptailorDB.run(insertHostelInfoQuery(name, noReviews, locationId))
 
   private def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
     for {
@@ -52,9 +49,6 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   private def insertHostelServicesQueries(hostelId: Int, serviceIds: Seq[Int]) =
     serviceIds.map(sid => insertHostelServiceQuery(HostelServiceRow(hostelId, sid)))
 
-  private def insertHostelInfoQuery(name: String, noReviews: Int, locationId: Int) =
-    Hostel.map(h => (h.name, h.noReviews, h.locationId)) returning Hostel.map(_.id) += (name, noReviews, locationId)
-
   private def insertReviewQuery(hostelId: Int, review: RatedReview) =
     Review.map(r => (r.hostelId, r.text, r.year, r.reviewer, r.city, r.gender, r.age)) returning Review.map(_.id) += {
       (hostelId, review.text, review.date.map(d => new Date(d.getMillis)), review.meta.reviewer, review.meta.city, review.meta.gender, review.meta.age)
@@ -69,32 +63,41 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   private def insertAttributeReviewQuery(row: AttributeReviewRow) =
     AttributeReview += row
 
+  def idempotentInsertHostelQuery(name: String, noReviews: Int, locationId: Int) =
+    Hostel.filter(_.name === name).map(_.id).result.headOption.flatMap { hostelIdOpt =>
+      hostelIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
+        Hostel.map(h => (h.name, h.noReviews, h.locationId)) returning Hostel.map(_.id) += (name, noReviews, locationId)
+      } { hostelId =>
+        DBIO.successful(hostelId)
+      }
+    }.transactionally
+
   private def idempotentInsertLocationQuery(city: String, country: String) =
-    Location.filter(l => l.city === city && l.country === country).map(_.id).result.headOption flatMap { locationIdOpt =>
+    Location.filter(l => l.city === city && l.country === country).map(_.id).result.headOption.flatMap { locationIdOpt =>
       locationIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
         Location.map(l => (l.city, l.country)) returning Location.map(_.id) += (city, country)
       } { locationId =>
         DBIO.successful(locationId)
       }
-    }
+    }.transactionally
 
   private def idempotentInsertAttributeQuery(name: String) =
-    Attribute.filter(_.name === name).map(_.id).result.headOption flatMap { attributeIdOpt =>
+    Attribute.filter(_.name === name).map(_.id).result.headOption.flatMap { attributeIdOpt =>
       attributeIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
         Attribute.map(_.name) returning Attribute.map(_.id) += name
       } { attributeId =>
         DBIO.successful(attributeId)
       }
-    }
+    }.transactionally
 
   private def idempotentInsertServiceQuery(name: String) =
-    Service.filter(_.name === name).map(_.id).result.headOption flatMap { serviceIdOpt =>
+    Service.filter(_.name === name).map(_.id).result.headOption.flatMap { serviceIdOpt =>
       serviceIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
         Service.map(_.name) returning Service.map(_.id) += name
       } { serviceId =>
         DBIO.successful(serviceId)
       }
-    }
+    }.transactionally
 
 }
 
