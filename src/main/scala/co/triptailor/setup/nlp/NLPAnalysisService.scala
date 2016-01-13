@@ -27,11 +27,15 @@ trait NLPConfig {
 trait NLPAnalysisService extends NLPConfig {
   val baseYear   = config.getInt("nlp.baseYear")
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
+  val boundaryTokenRegex = config.getString("boundaryTokenRegex")
+  val tokenPatternsToDiscard = config.getString("tokenPatternsToDiscard")
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
   val startEntry = config.getString("nlp.startEntry")
 
   val props = new Properties
   props.setProperty("annotators", annotators)
+  props.setProperty("ssplit.boundaryTokenRegex", boundaryTokenRegex)
+  props.setProperty("ssplit.tokenPatternsToDiscard", tokenPatternsToDiscard)
   val pipeline = new StanfordCoreNLP(props)
 
   def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
