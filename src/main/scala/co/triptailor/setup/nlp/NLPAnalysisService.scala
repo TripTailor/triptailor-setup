@@ -2,7 +2,6 @@ package co.triptailor.setup.nlp
 
 import java.util.Properties
 import java.util.stream.Collectors
-
 import co.triptailor.setup.domain._
 import com.typesafe.config.Config
 import edu.stanford.nlp.dcoref.CoNLL2011DocumentReader.NamedEntityAnnotation
@@ -12,9 +11,9 @@ import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations
 import edu.stanford.nlp.pipeline.{Annotation, StanfordCoreNLP}
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations
 import edu.stanford.nlp.util.CoreMap
-
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.io.Source
 
 trait NLPConfig {
   def config: Config
@@ -37,6 +36,8 @@ trait NLPAnalysisService extends NLPConfig {
   props.setProperty("ssplit.boundaryTokenRegex", boundaryTokenRegex)
   props.setProperty("ssplit.tokenPatternsToDiscard", tokenPatternsToDiscard)
   val pipeline = new StanfordCoreNLP(props)
+  
+  val dictionary = Source.fromFile("dictionary").getLines.toSet
 
   def rateReview(reviewData: UnratedReview)(implicit ec: ExecutionContext): Future[RatedReview] = {
     val unratedReview = new Annotation(reviewData.text)
@@ -98,7 +99,7 @@ trait NLPAnalysisService extends NLPConfig {
   private def buildAnnotatedTokens(tokens: Seq[CoreLabel]): Seq[AnnotatedToken] =
     for {
       token ← tokens
-      lemma = token.get(classOf[LemmaAnnotation]) if !(stopWords contains lemma) && !(lemma matches ".*?[^a-zA-Z-]+.*?")
+      lemma = token.get(classOf[LemmaAnnotation]) if (dictionary.contains(lemma)) && !(stopWords contains lemma)
       pos   = token.get(classOf[PartOfSpeechAnnotation]) if pos.equals("NN") || pos.equals("NNS") || pos.equals("JJ")
       ne    = token.get(classOf[NamedEntityAnnotation])
       start = token.beginPosition()
