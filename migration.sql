@@ -21,3 +21,6 @@ CREATE TABLE IF NOT EXISTS "attribute_review" (
   "positions" text NOT NULL,
   PRIMARY KEY(attribute_id, review_id)
 );
+
+ALTER TABLE "review"
+  ADD COLUMN sentiment numeric NOT NULL default 0;

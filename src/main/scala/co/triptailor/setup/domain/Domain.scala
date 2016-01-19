@@ -29,7 +29,7 @@ case class UnratedReview(text: String, date: Option[DateTime], meta: ReviewMetaD
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
-case class Position(start: Int, end: Int) {
+case class Position(start: Int, end: Int, sentenceNbr: Int) {
   override def productPrefix = ""
 }
 
@@ -38,5 +38,6 @@ case class AnnotatedPositionedToken(attribute: String, positions: Seq[Position])
 case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken], sentiment: Int)
 
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
-case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics], date: Option[DateTime], meta: ReviewMetaData)
+case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics],
+                       sentimentAverage: Double, date: Option[DateTime], meta: ReviewMetaData)
 case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics], info: HostelMetaData)
