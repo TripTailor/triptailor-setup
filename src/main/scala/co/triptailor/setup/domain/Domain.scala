@@ -5,11 +5,11 @@ import java.io.File
 import org.joda.time.DateTime
 
 object Sentiment {
-  val VeryPositive = 5
-  val Positive     = 4
-  val Neutral      = 3
-  val Negative     = 2
-  val VeryNegative = 1
+  val VeryPositive = 3
+  val Positive     = 2
+  val Neutral      = 1
+  val Negative     = -1
+  val VeryNegative = -2
 
   def apply(value: Int) =
     value + 1 match {
