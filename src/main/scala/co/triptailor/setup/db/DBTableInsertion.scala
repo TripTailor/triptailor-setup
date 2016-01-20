@@ -50,8 +50,9 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
     serviceIds.map(sid => insertHostelServiceQuery(HostelServiceRow(hostelId, sid)))
 
   private def insertReviewQuery(hostelId: Int, review: RatedReview) =
-    Review.map(r => (r.hostelId, r.text, r.year, r.reviewer, r.city, r.gender, r.age)) returning Review.map(_.id) += {
-      (hostelId, review.text, review.date.map(d => new Date(d.getMillis)), review.meta.reviewer, review.meta.city, review.meta.gender, review.meta.age)
+    Review.map(r => (r.hostelId, r.text, r.year, r.reviewer, r.city, r.gender, r.age, r.sentiment)) returning Review.map(_.id) += {
+      (hostelId, review.text, review.date.map(d => new Date(d.getMillis)), review.meta.reviewer,
+        review.meta.city, review.meta.gender, review.meta.age, review.sentimentAverage)
     }
 
   private def insertHostelAttributeQuery(row: HostelAttributeRow) =

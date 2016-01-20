@@ -50,8 +50,10 @@ trait NLPAnalysisService extends NLPConfig {
         val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse 2000d)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
+        ratedSentences.head.positionedSentence.sentiment
+        val sentimentAverage = ratedSentences.map(_.positionedSentence.sentiment).sum / (ratedSentences.size * 1.0)
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
-        RatedReview(reviewData.text, tokens, metrics, reviewData.date, reviewData.meta)
+        RatedReview(reviewData.text, tokens, metrics, sentimentAverage, reviewData.date, reviewData.meta)
       }
     }
   }
@@ -77,10 +79,10 @@ trait NLPAnalysisService extends NLPConfig {
 
   private def rateSentences(sentences: Seq[CoreMap], reviewYear: Double): Seq[RatedSentence] =
     for {
-      sentence           ← sentences
+      (sentence, nbr)    ← sentences.zipWithIndex
       tree               = sentence.get(classOf[SentimentCoreAnnotations.SentimentAnnotatedTree])
       sentiment          = RNNCoreAnnotations.getPredictedClass(tree)
-      tokens             = buildAnnotatedTokens(sentence.get(classOf[TokensAnnotation]).asScala)
+      tokens             = buildAnnotatedTokens(sentence.get(classOf[TokensAnnotation]).asScala, nbr)
       annotatedSentence  = AnnotatedSentence(sentence.toString, createAnnotatedPositionedTokens(tokens), Sentiment(sentiment))
       metrics            = calculateSentenceMetrics(annotatedSentence, reviewYear)
     } yield RatedSentence(annotatedSentence, metrics)
@@ -96,7 +98,7 @@ trait NLPAnalysisService extends NLPConfig {
         }
     }.values.toSeq
 
-  private def buildAnnotatedTokens(tokens: Seq[CoreLabel]): Seq[AnnotatedToken] =
+  private def buildAnnotatedTokens(tokens: Seq[CoreLabel], sentenceNbr: Int): Seq[AnnotatedToken] =
     for {
       token ← tokens
       lemma = token.get(classOf[LemmaAnnotation]) if (dictionary.contains(lemma)) && !(stopWords contains lemma)
@@ -104,7 +106,7 @@ trait NLPAnalysisService extends NLPConfig {
       ne    = token.get(classOf[NamedEntityAnnotation])
       start = token.beginPosition()
       end   = token.endPosition()
-    } yield AnnotatedToken(lemma, Position(start, end))
+    } yield AnnotatedToken(lemma, Position(start, end, sentenceNbr))
 
   private def createAnnotatedPositionedTokens(tokens: Seq[AnnotatedToken]): Seq[AnnotatedPositionedToken] = {
     def mergeTokens(positionedToken: AnnotatedPositionedToken, token: AnnotatedToken) =
