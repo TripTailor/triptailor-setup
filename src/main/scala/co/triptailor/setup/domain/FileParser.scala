@@ -13,7 +13,7 @@ object FileParser {
       txtFiles = hostel.listFiles.filter{ hostel => 
         hostel.getName.equals("info.txt") || hostel.getName.equals("reviews.txt")
       }
-      (generalFiles, reviewFiles) = txtFiles.partition(f => f.getName contains "_general.txt")
+      (generalFiles, reviewFiles) = txtFiles.partition(f => f.getName equals "info.txt")
       (generalFile, reviewFile) ← generalFiles zip reviewFiles
     } yield DocumentEntry(city.getName, country.getName, generalFile, reviewFile)
 
