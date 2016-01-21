@@ -71,6 +71,6 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
 object UnratedDocumentParser {
   val dateFormat = DateTimeFormat.forPattern("dd MMM yyyy")
 
-  val Date             = """^[^,]+,(\d{1,2}).*?([A-Za-z]{3}).*?(\d{4}).*?$""".r
-  val ReviewerMetaData = """^[^,]+,[^,]+,([^,]*),([^,]*),([^,]*),(\d*).*?$""".r
+  val Date             = """^(\d{1,2}).*?([A-Za-z]{3}).*?(\d{4}).*?$""".r
+  val ReviewerMetaData = """^[^,]+,([^,]*),([^,]*),([^,]*),(\d*).*?$""".r
 }
