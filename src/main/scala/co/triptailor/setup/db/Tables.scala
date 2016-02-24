@@ -1,4 +1,4 @@
-package db
+package co.triptailor.setup.db
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends {
@@ -66,6 +66,11 @@ trait Tables {
 
     /** Primary key of AttributeReview (database name attribute_review_pkey) */
     val pk = primaryKey("attribute_review_pkey", (attributeId, reviewId))
+
+    /** Index over (attributeId) (database name attribute_review_attribute_id_idx) */
+    val index1 = index("attribute_review_attribute_id_idx", attributeId)
+    /** Index over (reviewId) (database name attribute_review_review_id_idx) */
+    val index2 = index("attribute_review_review_id_idx", reviewId)
   }
   /** Collection-like TableQuery object for table AttributeReview */
   lazy val AttributeReview = new TableQuery(tag => new AttributeReview(tag))
@@ -335,18 +340,18 @@ trait Tables {
    *  @param city Database column city SqlType(varchar), Length(200,true), Default(None)
    *  @param gender Database column gender SqlType(varchar), Length(100,true), Default(None)
    *  @param age Database column age SqlType(int4), Default(None)
-   *  @param sentiment Database column sentiment SqlType(numeric), Default(0) */
-  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: scala.math.BigDecimal = 0)
+   *  @param sentiment Database column sentiment SqlType(varchar), Length(200,true), Default(None) */
+  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: Option[String] = None)
   /** GetResult implicit for fetching ReviewRow objects using plain SQL queries */
-  implicit def GetResultReviewRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Date]], e3: GR[Option[String]], e4: GR[Option[Int]], e5: GR[scala.math.BigDecimal]): GR[ReviewRow] = GR{
+  implicit def GetResultReviewRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Date]], e3: GR[Option[String]], e4: GR[Option[Int]]): GR[ReviewRow] = GR{
     prs => import prs._
-    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<[scala.math.BigDecimal]))
+    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<?[String]))
   }
   /** Table description of table review. Objects of this class serve as prototypes for rows in queries. */
   class Review(_tableTag: Tag) extends Table[ReviewRow](_tableTag, "review") {
     def * = (id, hostelId, text, year, reviewer, city, gender, age, sentiment) <> (ReviewRow.tupled, ReviewRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, Rep.Some(sentiment)).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, sentiment).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -364,8 +369,11 @@ trait Tables {
     val gender: Rep[Option[String]] = column[Option[String]]("gender", O.Length(100,varying=true), O.Default(None))
     /** Database column age SqlType(int4), Default(None) */
     val age: Rep[Option[Int]] = column[Option[Int]]("age", O.Default(None))
-    /** Database column sentiment SqlType(numeric), Default(0) */
-    val sentiment: Rep[scala.math.BigDecimal] = column[scala.math.BigDecimal]("sentiment", O.Default(0))
+    /** Database column sentiment SqlType(varchar), Length(200,true), Default(None) */
+    val sentiment: Rep[Option[String]] = column[Option[String]]("sentiment", O.Length(200,varying=true), O.Default(None))
+
+    /** Index over (hostelId) (database name review_hostel_id_idx) */
+    val index1 = index("review_hostel_id_idx", hostelId)
   }
   /** Collection-like TableQuery object for table Review */
   lazy val Review = new TableQuery(tag => new Review(tag))

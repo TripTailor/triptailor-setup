@@ -23,4 +23,4 @@ CREATE TABLE IF NOT EXISTS "attribute_review" (
 );
 
 ALTER TABLE "review"
-  ADD COLUMN sentiment numeric NOT NULL default 0;
+  ADD COLUMN sentiment varchar(200);

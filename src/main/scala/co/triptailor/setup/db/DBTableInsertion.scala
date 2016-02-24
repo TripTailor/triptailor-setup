@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DBTableInsertion(implicit val ec: ExecutionContext) {
   import DBTableInsertion._
-  import db.Tables._
+  import Tables._
 
   def addHostelDependencies(document: RatedDocument) =
     for {
@@ -52,7 +52,7 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   private def insertReviewQuery(hostelId: Int, review: RatedReview) =
     Review.map(r => (r.hostelId, r.text, r.year, r.reviewer, r.city, r.gender, r.age, r.sentiment)) returning Review.map(_.id) += {
       (hostelId, review.text, review.date.map(d => new Date(d.getMillis)), review.meta.reviewer,
-        review.meta.city, review.meta.gender, review.meta.age, review.sentimentAverage)
+        review.meta.city, review.meta.gender, review.meta.age, Some(review.sentiments.mkString(",")))
     }
 
   private def insertHostelAttributeQuery(row: HostelAttributeRow) =

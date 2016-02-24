@@ -26,8 +26,8 @@ trait NLPConfig {
 trait NLPAnalysisService extends NLPConfig {
   val baseYear   = config.getInt("nlp.baseYear")
   val annotators = config.getStringList("nlp.annotators").stream().collect(Collectors.joining(","))
-  val boundaryTokenRegex = config.getString("boundaryTokenRegex")
-  val tokenPatternsToDiscard = config.getString("tokenPatternsToDiscard")
+  val boundaryTokenRegex = config.getString("nlp.boundaryTokenRegex")
+  val tokenPatternsToDiscard = config.getString("nlp.tokenPatternsToDiscard")
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
   val startEntry = config.getString("nlp.startEntry")
 
@@ -50,10 +50,9 @@ trait NLPAnalysisService extends NLPConfig {
         val ratedSentences   = rateSentences(unratedSentences, reviewData.date.map(_.toString("yyyy").toDouble) getOrElse 2000d)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
-        ratedSentences.head.positionedSentence.sentiment
-        val sentimentAverage = ratedSentences.map(_.positionedSentence.sentiment).sum / (ratedSentences.size * 1.0)
+        val sentiments = ratedSentences.map(_.positionedSentence.sentiment)
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
-        RatedReview(reviewData.text, tokens, metrics, sentimentAverage, reviewData.date, reviewData.meta)
+        RatedReview(reviewData.text, tokens, metrics, sentiments, reviewData.date, reviewData.meta)
       }
     }
   }
@@ -101,7 +100,7 @@ trait NLPAnalysisService extends NLPConfig {
   private def buildAnnotatedTokens(tokens: Seq[CoreLabel], sentenceNbr: Int): Seq[AnnotatedToken] =
     for {
       token ← tokens
-      lemma = token.get(classOf[LemmaAnnotation]) if (dictionary.contains(lemma)) && !(stopWords contains lemma)
+      lemma = token.get(classOf[LemmaAnnotation]) if dictionary.contains(lemma) && !(stopWords contains lemma)
       pos   = token.get(classOf[PartOfSpeechAnnotation]) if pos.equals("NN") || pos.equals("NNS") || pos.equals("JJ")
       ne    = token.get(classOf[NamedEntityAnnotation])
       start = token.beginPosition()
