@@ -21,7 +21,7 @@ object Sentiment {
     }
 }
 
-case class DocumentEntry(city: String, country: String, generalFile: File, reviewFile: File)
+case class DocumentEntry(city: String, country: String, infoFile: File, reviewFile: File)
 
 case class ReviewMetaData(reviewer: Option[String], city: Option[String], gender: Option[String], age: Option[Int])
 case class HostelMetaData(name: String, city: String, country: String, hoscars: Int, services: Seq[String])

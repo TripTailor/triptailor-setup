@@ -8,12 +8,12 @@ object FileParser {
 
   def documentEntries =
     for {
-      country  ← data.listFiles
-      city     ← country.listFiles
-      hostel   ← city.listFiles
-      files    = hostel.listFiles.filter(f => relevantFiles.pattern.matcher(f.getName).matches)
+      country                     ← data.listFiles
+      city                        ← country.listFiles
+      hostel                      ← city.listFiles
+      files                       = hostel.listFiles.filter(f => relevantFiles.pattern.matcher(f.getName).matches)
       (generalFiles, reviewFiles) = files.partition(f => f.getName equals "info.txt")
-      (generalFile, reviewFile) ← generalFiles zip reviewFiles
+      (generalFile, reviewFile)   ← generalFiles zip reviewFiles
     } yield DocumentEntry(city.getName, country.getName, generalFile, reviewFile)
 
 }

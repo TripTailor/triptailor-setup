@@ -4,9 +4,9 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.{SourceShape, ActorMaterializer}
 import akka.stream.io.Framing
-import akka.stream.scaladsl.{RunnableGraph, GraphDSL, Source, FileIO, Zip}
+import akka.stream.scaladsl.{FileIO, GraphDSL, Source, Zip}
+import akka.stream.{ActorMaterializer, SourceShape}
 import akka.util.ByteString
 import org.joda.time.format.DateTimeFormat
 
@@ -19,7 +19,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
 
       val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
 
-      parseGeneralFile(doc.generalFile, doc.city, doc.country) ~> zip.in0
+      parseInfoFile(doc.infoFile, doc.city, doc.country) ~> zip.in0
       parseReviewsFile(doc.reviewFile) ~> zip.in1
 
       SourceShape(zip.out)
@@ -38,19 +38,26 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
         unratedReviewMetaData +: acc
       }
 
-  private def parseGeneralFile(file: File, city: String, country: String) = {
-    val lines = scala.io.Source.fromFile(file).getLines()
-    val hostelName = lines.next().replaceAll(";", "").replaceAll("_", " ")
-    lines.next(); lines.next(); lines.next(); lines.next()
-    val hoscars = lines.next().toInt
-    for (i ← 1 to hoscars) lines.next()
-    val awards = lines.next().toInt
-    for (i ← 1 to awards) lines.next()
-    val noServices = lines.next().toInt
-    val services   = lines.take(noServices).toSeq
-
-    val metaData = HostelMetaData(hostelName, city, country, hoscars, services)
-    Source.fromFuture(FastFuture.successful[HostelMetaData](metaData))
+  private def parseInfoFile(f: File, city: String, country: String) = {
+    var lines = scala.io.Source.fromFile(f).getLines().toSeq
+    lines = lines.tail
+    val name = lines.head
+    lines = lines.tail
+    val uri = lines.head
+    lines = lines.tail.tail
+    val latLong = lines.head
+    lines = lines.tail
+    val desc = lines.head
+    lines = lines.tail
+    val noServices = lines.head.toInt
+    lines = lines.tail
+    val services = lines.take(noServices)
+    lines = lines.drop(noServices)
+    val noXtras = lines.head.toInt
+    lines = lines.tail
+    val xtras = lines.take(noXtras)
+    val metaData = HostelMetaData(name, city, country, hoscars = 0, services)
+    Source.fromFuture(FastFuture.successful(metaData))
   }
 
   private def parseDate(line: String) =
