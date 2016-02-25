@@ -20,7 +20,6 @@ trait NLPConfig {
   def baseYear: Int
   def annotators: String
   def stopWords: Set[String]
-  def startEntry: String
 }
 
 trait NLPAnalysisService extends NLPConfig {
@@ -29,7 +28,6 @@ trait NLPAnalysisService extends NLPConfig {
   val boundaryTokenRegex = config.getString("nlp.boundaryTokenRegex")
   val tokenPatternsToDiscard = config.getString("nlp.tokenPatternsToDiscard")
   val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
-  val startEntry = config.getString("nlp.startEntry")
 
   val props = new Properties
   props.setProperty("annotators", annotators)

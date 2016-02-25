@@ -23,7 +23,6 @@ object Setup extends NLPAnalysisService {
     val parser = new UnratedDocumentParser
 
     Source(FileParser.documentEntries.toVector)
-      .dropWhile(_.generalFile.getName != (startEntry + "_general.txt"))
       .flatMapConcat(parser.parse)
       .flatMapConcat(sourceFromUnratedReviews(_, parallelism))
       .runForeach(println) onComplete {
