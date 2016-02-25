@@ -1,6 +1,7 @@
 package co.triptailor.setup.domain
 
 import java.io.File
+import java.net.URL
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
@@ -39,11 +40,16 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
       }
 
   private def parseInfoFile(f: File, city: String, country: String) = {
+    def buildLocation(latLong: String) = {
+      val Array(lat, long) = latLong.split(",")
+      Coordinates(java.lang.Double.parseDouble(lat), java.lang.Double.parseDouble(long))
+    }
+
     var lines = scala.io.Source.fromFile(f).getLines().toSeq
     lines = lines.tail
     val name = lines.head
     lines = lines.tail
-    val uri = lines.head
+    val url = new URL(lines.head)
     lines = lines.tail.tail
     val latLong = lines.head
     lines = lines.tail
@@ -56,7 +62,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val noXtras = lines.head.toInt
     lines = lines.tail
     val xtras = lines.take(noXtras)
-    val metaData = HostelMetaData(name, city, country, hoscars = 0, services)
+    val metaData = HostelMetaData(name, city, country, url, buildLocation(latLong), desc, services, xtras)
     Source.fromFuture(FastFuture.successful(metaData))
   }
 

@@ -1,6 +1,7 @@
 package co.triptailor.setup.domain
 
 import java.io.File
+import java.net.URL
 
 import org.joda.time.DateTime
 
@@ -22,9 +23,11 @@ object Sentiment {
 }
 
 case class DocumentEntry(city: String, country: String, infoFile: File, reviewFile: File)
+case class Coordinates(lat: Double, long: Double)
 
 case class ReviewMetaData(reviewer: Option[String], city: Option[String], gender: Option[String], age: Option[Int])
-case class HostelMetaData(name: String, city: String, country: String, hoscars: Int, services: Seq[String])
+case class HostelMetaData(name: String, city: String, country: String, uri: URL, location: Coordinates,
+                          description: String, services: Seq[String], xtras: Seq[String])
 case class UnratedReview(text: String, date: Option[DateTime], meta: ReviewMetaData)
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
 
