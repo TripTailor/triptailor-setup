@@ -3,10 +3,10 @@ package co.triptailor.setup.domain
 import java.io.File
 import java.net.URL
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.io.Framing
-import akka.stream.scaladsl.{FileIO, GraphDSL, Source, Zip}
+import akka.stream.scaladsl.{FileIO, GraphDSL, Source, Zip, Framing}
 import akka.stream.{ActorMaterializer, SourceShape}
 import akka.util.ByteString
 import org.joda.time.format.DateTimeFormat
@@ -14,7 +14,7 @@ import org.joda.time.format.DateTimeFormat
 class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMaterializer) {
   import UnratedDocumentParser._
 
-  def parse(doc: DocumentEntry): Source[UnratedDocument, Unit] =
+  def parse(doc: DocumentEntry): Source[UnratedDocument, NotUsed] =
     Source.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 

@@ -4,8 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-val akkaVersion        = "2.4.1"
-val akkaStreamsVersion = "2.0.1"
+val akkaVersion        = "2.4.2"
 val ammoniteVersion    = "0.5.4"
 val slickVersion       = "3.1.1"
 
@@ -28,8 +27,8 @@ val nlpAnalysisDependencies = Seq(
 
 val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-  "com.typesafe.akka" % "akka-stream-experimental_2.11" % akkaStreamsVersion,
-  "com.typesafe.akka" % "akka-http-core-experimental_2.11" % akkaStreamsVersion
+  "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+  "com.typesafe.akka" %% "akka-http-experimental" % akkaVersion
 )
 
 val testDependencies = Seq(
