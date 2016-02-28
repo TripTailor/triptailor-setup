@@ -45,4 +45,10 @@ libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencie
 
 initialCommands in console := """ammonite.repl.Main.run("")"""
 
+// Clear console at the start of each run
+triggeredMessage in ThisBuild := Watched.clearWhenTriggered
+
+// Ctrl-C quits to console view
+cancelable in Global := true
+
 enablePlugins(JavaAppPackaging)
