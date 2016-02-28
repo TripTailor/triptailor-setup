@@ -3,6 +3,7 @@ package co.triptailor.setup
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
+import akka.http.scaladsl.util.FastFuture
 import co.triptailor.setup.db.DBTableInsertion
 import co.triptailor.setup.domain._
 import co.triptailor.setup.nlp.NLPAnalysisService
@@ -45,7 +46,7 @@ object Setup extends NLPAnalysisService {
         .map { hostelId =>
           println(s"Done inserting hostel info for ${unratedDocument.info.name} with hostel_id=$hostelId")
           hostelId
-        }.map(Future.successful)
+        }.map(FastFuture.successful)
     else
       Source(unratedDocument.reviewData.toVector).mapAsyncUnordered(parallelism)(rateReview)
         .grouped(Int.MaxValue).mapAsync(parallelism = 1) { ratedReviews =>
