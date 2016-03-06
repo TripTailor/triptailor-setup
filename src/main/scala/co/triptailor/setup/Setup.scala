@@ -15,7 +15,7 @@ import scala.util.{Failure, Success}
 
 object Setup extends NLPAnalysisService {
   def main(args: Array[String]): Unit = {
-    val parallelism = Runtime.getRuntime.availableProcessors() + 1
+    val parallelism = Runtime.getRuntime.availableProcessors()
 
     implicit val system = ActorSystem("nlp-test")
     implicit val mat = ActorMaterializer()
