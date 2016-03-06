@@ -25,6 +25,7 @@ object Setup extends NLPAnalysisService {
 
     Source(FileParser.documentEntries.toVector)
       .flatMapConcat(parser.parse)
+      .dropWhile(_.info.name != startEntry)
       .flatMapConcat(sourceFromUnratedReviews(_, parallelism))
       .runForeach(println) onComplete {
         case Success(v) =>
