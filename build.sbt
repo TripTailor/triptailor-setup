@@ -5,7 +5,7 @@ version := "1.0"
 scalaVersion := "2.11.7"
 
 val akkaVersion        = "2.4.2"
-val ammoniteVersion    = "0.5.4"
+val ammoniteVersion    = "0.5.6"
 val slickVersion       = "3.1.1"
 
 val utilityDependencies = Seq(
