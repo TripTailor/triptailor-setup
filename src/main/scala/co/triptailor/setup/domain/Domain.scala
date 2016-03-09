@@ -26,7 +26,7 @@ case class DocumentEntry(city: String, country: String, infoFile: File, reviewFi
 case class Coordinates(lat: Double, long: Double)
 
 case class ReviewMetaData(reviewer: Option[String], city: Option[String], gender: Option[String], age: Option[Int])
-case class HostelMetaData(name: String, city: String, country: String, uri: URL, location: Coordinates,
+case class HostelMetaData(name: String, city: String, country: String, uri: URL, location: Option[Coordinates],
                           description: String, services: Seq[String], xtras: Seq[String])
 case class UnratedReview(text: String, date: Option[DateTime], meta: ReviewMetaData)
 case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)

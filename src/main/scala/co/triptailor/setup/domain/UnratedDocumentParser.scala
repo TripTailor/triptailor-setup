@@ -40,10 +40,13 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
       }
 
   private def parseInfoFile(f: File, city: String, country: String) = {
-    def buildLocation(latLong: String) = {
-      val Array(lat, long) = latLong.split(",")
-      Coordinates(java.lang.Double.parseDouble(lat), java.lang.Double.parseDouble(long))
-    }
+    def buildLocation(latLong: String) =
+      try {
+        val Array(lat, long) = latLong.split(",")
+        Some(Coordinates(java.lang.Double.parseDouble(lat), java.lang.Double.parseDouble(long)))
+      } catch {
+        case _: Throwable => None
+      }
 
     var lines = scala.io.Source.fromFile(f).getLines().toSeq
     lines = lines.tail
@@ -51,8 +54,8 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     lines = lines.tail
     val url = new URL(lines.head)
     lines = lines.tail.tail
-    val latLong = lines.head
-    lines = lines.tail
+    val coords = buildLocation(lines.head)
+    lines = if (coords.nonEmpty) lines.tail else lines
     val desc = lines.head
     lines = lines.tail
     val noServices = lines.head.toInt
@@ -62,7 +65,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val noXtras = lines.head.toInt
     lines = lines.tail
     val xtras = lines.take(noXtras)
-    val metaData = HostelMetaData(name, city, country, url, buildLocation(latLong), desc, services, xtras)
+    val metaData = HostelMetaData(name, city, country, url, coords, desc, services, xtras)
     Source.fromFuture(FastFuture.successful(metaData))
   }
 
