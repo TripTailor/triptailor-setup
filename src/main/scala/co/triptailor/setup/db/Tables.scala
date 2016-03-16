@@ -1,4 +1,5 @@
 package co.triptailor.setup.db
+
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends {
@@ -115,18 +116,19 @@ trait Tables {
    *  @param url Database column url SqlType(varchar), Length(400,true), Default(None)
    *  @param noReviews Database column no_reviews SqlType(int4)
    *  @param locationId Database column location_id SqlType(int4)
-   *  @param hostelworldId Database column hostelworld_id SqlType(int4), Default(None) */
-  case class HostelRow(id: Int, name: String, description: Option[String] = None, price: Option[Double] = None, images: Option[String] = None, url: Option[String] = None, noReviews: Int, locationId: Int, hostelworldId: Option[Int] = None)
+   *  @param hostelworldId Database column hostelworld_id SqlType(int4), Default(None)
+   *  @param address Database column address SqlType(varchar), Length(300,true), Default(None) */
+  case class HostelRow(id: Int, name: String, description: Option[String] = None, price: Option[Double] = None, images: Option[String] = None, url: Option[String] = None, noReviews: Int, locationId: Int, hostelworldId: Option[Int] = None, address: Option[String] = None)
   /** GetResult implicit for fetching HostelRow objects using plain SQL queries */
   implicit def GetResultHostelRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[String]], e3: GR[Option[Double]], e4: GR[Option[Int]]): GR[HostelRow] = GR{
     prs => import prs._
-    HostelRow.tupled((<<[Int], <<[String], <<?[String], <<?[Double], <<?[String], <<?[String], <<[Int], <<[Int], <<?[Int]))
+    HostelRow.tupled((<<[Int], <<[String], <<?[String], <<?[Double], <<?[String], <<?[String], <<[Int], <<[Int], <<?[Int], <<?[String]))
   }
   /** Table description of table hostel. Objects of this class serve as prototypes for rows in queries. */
   class Hostel(_tableTag: Tag) extends Table[HostelRow](_tableTag, "hostel") {
-    def * = (id, name, description, price, images, url, noReviews, locationId, hostelworldId) <> (HostelRow.tupled, HostelRow.unapply)
+    def * = (id, name, description, price, images, url, noReviews, locationId, hostelworldId, address) <> (HostelRow.tupled, HostelRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(name), description, price, images, url, Rep.Some(noReviews), Rep.Some(locationId), hostelworldId).shaped.<>({r=>import r._; _1.map(_=> HostelRow.tupled((_1.get, _2.get, _3, _4, _5, _6, _7.get, _8.get, _9)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(name), description, price, images, url, Rep.Some(noReviews), Rep.Some(locationId), hostelworldId, address).shaped.<>({r=>import r._; _1.map(_=> HostelRow.tupled((_1.get, _2.get, _3, _4, _5, _6, _7.get, _8.get, _9, _10)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -146,6 +148,8 @@ trait Tables {
     val locationId: Rep[Int] = column[Int]("location_id")
     /** Database column hostelworld_id SqlType(int4), Default(None) */
     val hostelworldId: Rep[Option[Int]] = column[Option[Int]]("hostelworld_id", O.Default(None))
+    /** Database column address SqlType(varchar), Length(300,true), Default(None) */
+    val address: Rep[Option[String]] = column[Option[String]]("address", O.Length(300,varying=true), O.Default(None))
 
     /** Foreign key referencing Location (database name hostel_ibfk_1) */
     lazy val locationFk = foreignKey("hostel_ibfk_1", locationId, Location)(r => r.id, onUpdate=ForeignKeyAction.NoAction, onDelete=ForeignKeyAction.NoAction)
@@ -340,18 +344,20 @@ trait Tables {
    *  @param city Database column city SqlType(varchar), Length(200,true), Default(None)
    *  @param gender Database column gender SqlType(varchar), Length(100,true), Default(None)
    *  @param age Database column age SqlType(int4), Default(None)
-   *  @param sentiment Database column sentiment SqlType(varchar), Length(200,true), Default(None) */
-  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: Option[String] = None)
+   *  @param sentiment Database column sentiment SqlType(varchar), Length(200,true), Default(None)
+   *  @param lat Database column lat SqlType(int2), Default(None)
+   *  @param long Database column long SqlType(int2), Default(None) */
+  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: Option[String] = None, lat: Option[Short] = None, long: Option[Short] = None)
   /** GetResult implicit for fetching ReviewRow objects using plain SQL queries */
-  implicit def GetResultReviewRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Date]], e3: GR[Option[String]], e4: GR[Option[Int]]): GR[ReviewRow] = GR{
+  implicit def GetResultReviewRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Date]], e3: GR[Option[String]], e4: GR[Option[Int]], e5: GR[Option[Short]]): GR[ReviewRow] = GR{
     prs => import prs._
-    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<?[String]))
+    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<?[String], <<?[Short], <<?[Short]))
   }
   /** Table description of table review. Objects of this class serve as prototypes for rows in queries. */
   class Review(_tableTag: Tag) extends Table[ReviewRow](_tableTag, "review") {
-    def * = (id, hostelId, text, year, reviewer, city, gender, age, sentiment) <> (ReviewRow.tupled, ReviewRow.unapply)
+    def * = (id, hostelId, text, year, reviewer, city, gender, age, sentiment, lat, long) <> (ReviewRow.tupled, ReviewRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, sentiment).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, sentiment, lat, long).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -371,6 +377,10 @@ trait Tables {
     val age: Rep[Option[Int]] = column[Option[Int]]("age", O.Default(None))
     /** Database column sentiment SqlType(varchar), Length(200,true), Default(None) */
     val sentiment: Rep[Option[String]] = column[Option[String]]("sentiment", O.Length(200,varying=true), O.Default(None))
+    /** Database column lat SqlType(int2), Default(None) */
+    val lat: Rep[Option[Short]] = column[Option[Short]]("lat", O.Default(None))
+    /** Database column long SqlType(int2), Default(None) */
+    val long: Rep[Option[Short]] = column[Option[Short]]("long", O.Default(None))
 
     /** Index over (hostelId) (database name review_hostel_id_idx) */
     val index1 = index("review_hostel_id_idx", hostelId)

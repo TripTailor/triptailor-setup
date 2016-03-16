@@ -22,14 +22,14 @@ object Sentiment {
     }
 }
 
-case class DocumentEntry(city: String, country: String, infoFile: File, reviewFile: File)
+case class DocumentEntry(city: String, country: String, infoFile: File, reviewFile: File, imagesFile: File)
 case class Coordinates(lat: Double, long: Double)
 
 case class ReviewMetaData(reviewer: Option[String], city: Option[String], gender: Option[String], age: Option[Int])
-case class HostelMetaData(name: String, city: String, country: String, uri: URL, location: Option[Coordinates],
+case class HostelMetaData(name: String, address: String, city: String, country: String, uri: URL, location: Option[Coordinates],
                           description: String, services: Seq[String], xtras: Seq[String])
 case class UnratedReview(text: String, date: Option[DateTime], meta: ReviewMetaData)
-case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData)
+case class UnratedDocument(reviewData: Seq[UnratedReview], info: HostelMetaData, imagesUrls: Seq[String])
 
 case class RatingMetrics(sentiment: Int, freq: Double, cfreq: Double)
 case class Position(start: Int, end: Int, sentenceNbr: Int) {
@@ -43,4 +43,4 @@ case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken]
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
 case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics],
                        sentiments: Seq[Int], date: Option[DateTime], meta: ReviewMetaData)
-case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics], info: HostelMetaData)
+case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics], info: HostelMetaData, imagesUrls: Seq[String])

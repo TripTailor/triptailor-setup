@@ -6,7 +6,7 @@ import java.net.URL
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
-import akka.stream.scaladsl.{FileIO, GraphDSL, Source, Zip, Framing}
+import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, SourceShape}
 import akka.util.ByteString
 import org.joda.time.format.DateTimeFormat
@@ -18,15 +18,24 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     Source.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val zip = b.add(Zip[HostelMetaData, Seq[UnratedReview]]())
+      val zip = b.add(ZipWith((meta: HostelMetaData, reviews: Seq[UnratedReview], imagesUrls: Seq[String]) =>
+        (meta, reviews, imagesUrls)
+      ))
 
       parseInfoFile(doc.infoFile, doc.city, doc.country) ~> zip.in0
       parseReviewsFile(doc.reviewFile) ~> zip.in1
+      parseImagesFile(doc.imagesFile) ~> zip.in2
 
       SourceShape(zip.out)
-    }).map { case (unratedHostelMetaData, unratedReviewsMetaData) =>
-      UnratedDocument(unratedReviewsMetaData, unratedHostelMetaData)
+    }).map { case (unratedHostelMetaData, unratedReviewsMetaData, imagesUrls) =>
+      UnratedDocument(unratedReviewsMetaData, unratedHostelMetaData, imagesUrls)
     }
+
+  def parseImagesFile(file: File) =
+    FileIO.fromFile(file)
+      .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
+      .map(_.utf8String)
+      .fold(Seq.empty[String])(_ :+ _)
 
   def parseReviewsFile(file: File) =
     FileIO.fromFile(file)
@@ -53,7 +62,9 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val name = lines.head
     lines = lines.tail
     val url = new URL(lines.head)
-    lines = lines.tail.tail
+    lines = lines.tail
+    val address = lines.head
+    lines = lines.tail
     val coords = buildLocation(lines.head)
     lines = if (coords.nonEmpty) lines.tail else lines
     val desc = lines.head
@@ -65,7 +76,7 @@ class UnratedDocumentParser(implicit system: ActorSystem, materializer: ActorMat
     val noXtras = lines.head.toInt
     lines = lines.tail
     val xtras = lines.take(noXtras)
-    val metaData = HostelMetaData(name, city, country, url, coords, desc, services, xtras)
+    val metaData = HostelMetaData(name, address, city, country, url, coords, desc, services, xtras)
     Source.fromFuture(FastFuture.successful(metaData))
   }
 

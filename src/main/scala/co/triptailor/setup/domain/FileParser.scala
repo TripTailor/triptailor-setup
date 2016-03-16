@@ -3,17 +3,19 @@ package co.triptailor.setup.domain
 import java.io.File
 
 object FileParser {
-  lazy val data          = new File("./data")
-  lazy val relevantFiles = """(info.txt)|(reviews.txt)""".r
+  private lazy val data   = new File("./data")
+  private val GeneralFile = "info.txt".r
+  private val ReviewsFile = "reviews.txt".r
+  private val ImagesFile  = "images.txt".r
 
   def documentEntries =
     for {
-      country                     ← data.listFiles
-      city                        ← country.listFiles
-      hostel                      ← city.listFiles
-      files                       = hostel.listFiles.filter(f => relevantFiles.pattern.matcher(f.getName).matches)
-      (generalFiles, reviewFiles) = files.partition(f => f.getName equals "info.txt")
-      (generalFile, reviewFile)   ← generalFiles zip reviewFiles
-    } yield DocumentEntry(city.getName, country.getName, generalFile, reviewFile)
-
+      country     ← data.listFiles.toSeq
+      city        ← country.listFiles.toSeq
+      hostel      ← city.listFiles.toSeq
+      files       = hostel.listFiles.toSeq
+      generalFile ← files.find(f => GeneralFile.pattern.matcher(f.getName).matches)
+      reviewsFile ← files.find(f => ReviewsFile.pattern.matcher(f.getName).matches)
+      imagesFile  ← files.find(f => ImagesFile.pattern.matcher(f.getName).matches)
+    } yield DocumentEntry(city.getName, country.getName, generalFile, reviewsFile, imagesFile)
 }

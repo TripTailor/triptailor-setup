@@ -107,7 +107,8 @@ CREATE TABLE hostel (
     url character varying(400) DEFAULT NULL::character varying,
     no_reviews integer NOT NULL,
     location_id integer NOT NULL,
-    hostelworld_id integer
+    hostelworld_id integer,
+    address character varying(300)
 );
 
 
@@ -343,6 +344,166 @@ ALTER TABLE public.share OWNER TO triptailor;
 --
 
 ALTER TABLE ONLY review ALTER COLUMN id SET DEFAULT nextval('review_id_seq'::regclass);
+
+
+--
+-- Data for Name: attribute; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY attribute (id, name) FROM stdin;
+\.
+
+
+--
+-- Name: attribute_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('attribute_id_seq', 1, false);
+
+
+--
+-- Data for Name: attribute_review; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY attribute_review (attribute_id, review_id, positions) FROM stdin;
+\.
+
+
+--
+-- Data for Name: attribute_search; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY attribute_search (attribute_id, search_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hostel; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY hostel (id, name, description, price, images, url, no_reviews, location_id, hostelworld_id, address) FROM stdin;
+\.
+
+
+--
+-- Data for Name: hostel_attribute; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY hostel_attribute (hostel_id, attribute_id, freq, cfreq, rating) FROM stdin;
+\.
+
+
+--
+-- Name: hostel_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('hostel_id_seq', 1, false);
+
+
+--
+-- Data for Name: hostel_search; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY hostel_search (hostel_id, search_id, "timestamp") FROM stdin;
+\.
+
+
+--
+-- Data for Name: hostel_service; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY hostel_service (hostel_id, service_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: location; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY location (id, city, country, state, region, continent) FROM stdin;
+\.
+
+
+--
+-- Name: location_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('location_id_seq', 1, false);
+
+
+--
+-- Data for Name: play_evolutions; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY play_evolutions (id, hash, applied_at, apply_script, revert_script, state, last_problem) FROM stdin;
+\.
+
+
+--
+-- Name: play_evolutions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('play_evolutions_id_seq', 1, false);
+
+
+--
+-- Data for Name: review; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY review (id, hostel_id, text, year, reviewer, city, gender, age, sentiment, lat, long) FROM stdin;
+\.
+
+
+--
+-- Name: review_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('review_id_seq', 1, false);
+
+
+--
+-- Data for Name: search; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY search (id, sess, city_id, hostel_id, "timestamp", adwords) FROM stdin;
+\.
+
+
+--
+-- Name: search_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('search_id_seq', 1, false);
+
+
+--
+-- Data for Name: service; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY service (id, name) FROM stdin;
+\.
+
+
+--
+-- Name: service_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('service_id_seq', 1, false);
+
+
+--
+-- Data for Name: share; Type: TABLE DATA; Schema: public; Owner: triptailor
+--
+
+COPY share (id, session_id) FROM stdin;
+\.
+
+
+--
+-- Name: share_id_seq; Type: SEQUENCE SET; Schema: public; Owner: triptailor
+--
+
+SELECT pg_catalog.setval('share_id_seq', 1, false);
 
 
 --

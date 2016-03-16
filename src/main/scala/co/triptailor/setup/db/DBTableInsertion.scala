@@ -2,7 +2,7 @@ package co.triptailor.setup.db
 
 import java.sql.Date
 
-import co.triptailor.setup.domain.{RatedDocument, RatedReview, RatingMetrics}
+import co.triptailor.setup.domain.{HostelMetaData, RatedDocument, RatedReview, RatingMetrics}
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 
@@ -16,7 +16,7 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   def addHostelDependencies(document: RatedDocument) =
     for {
       locationId ← triptailorDB.run(idempotentInsertLocationQuery(document.info.city, document.info.country))
-      hostelId   ← triptailorDB.run(idempotentInsertHostelQuery(document.info.name, document.reviews.size, locationId))
+      hostelId   ← triptailorDB.run(idempotentInsertHostelQuery(document.info, document.reviews.size, locationId, document.imagesUrls))
       _          ← insertHostelDependencies(document, hostelId)
     } yield hostelId
 
@@ -82,10 +82,12 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
       }
     }.transactionally
 
-  private def idempotentInsertHostelQuery(name: String, noReviews: Int, locationId: Int) =
-    Hostel.filter(_.name === name).map(_.id).result.headOption.flatMap { hostelIdOpt =>
+  private def idempotentInsertHostelQuery(info: HostelMetaData, noReviews: Int, locationId: Int, imagesUrls: Seq[String]) =
+    Hostel.filter(_.name === info.name).map(_.id).result.headOption.flatMap { hostelIdOpt =>
       hostelIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
-        Hostel.map(h => (h.name, h.noReviews, h.locationId)) returning Hostel.map(_.id) += (name, noReviews, locationId)
+        Hostel.map(h => (h.name, h.noReviews, h.locationId, h.address, h.description, h.images)) returning Hostel.map(_.id) += {
+          (info.name, noReviews, locationId, Some(info.address), Some(info.description), Some(imagesUrls.mkString(",")))
+        }
       } { hostelId =>
         DBIO.successful(hostelId)
       }
