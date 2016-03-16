@@ -2,7 +2,7 @@ name := """triptailor-setup"""
 
 version := "1.0"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 val akkaVersion        = "2.4.2"
 val ammoniteVersion    = "0.5.6"
@@ -36,12 +36,12 @@ val testDependencies = Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
 )
 
-val ammoniteRepl = Seq(
-  "com.lihaoyi" % "ammonite-repl" % ammoniteVersion cross CrossVersion.full
-)
+/*val ammoniteRepl = Seq(*/
+  /*"com.lihaoyi" % "ammonite-repl" % ammoniteVersion cross CrossVersion.full*/
+/*)*/
 
 libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencies ++
-  nlpAnalysisDependencies ++ testDependencies ++ ammoniteRepl
+  nlpAnalysisDependencies ++ testDependencies //++ ammoniteRepl
 
 initialCommands in console := """ammonite.repl.Main.run("")"""
 
