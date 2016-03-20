@@ -9,8 +9,8 @@ object Sentiment {
   val VeryPositive = 3
   val Positive     = 2
   val Neutral      = 1
-  val Negative     = -1
-  val VeryNegative = -2
+  val Negative     = 0
+  val VeryNegative = 0
 
   def apply(value: Int) =
     value match {
