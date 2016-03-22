@@ -43,7 +43,7 @@ val testDependencies = Seq(
 libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencies ++
   nlpAnalysisDependencies ++ testDependencies //++ ammoniteRepl
 
-initialCommands in console := """ammonite.repl.Main.run("")"""
+/*initialCommands in console := """ammonite.repl.Main.run("")"""*/
 
 // Clear console at the start of each run
 triggeredMessage in ThisBuild := Watched.clearWhenTriggered
