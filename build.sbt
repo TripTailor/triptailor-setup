@@ -44,6 +44,17 @@ libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencie
   nlpAnalysisDependencies ++ testDependencies //++ ammoniteRepl
 
 /*initialCommands in console := """ammonite.repl.Main.run("")"""*/
+initialCommands in console := """
+  | import akka.actor.ActorSystem
+  | import akka.stream.ActorMaterializer
+  | import scala.concurrent.{ Await, Future }
+  | import scala.concurrent.duration._
+  | import co.triptailor.setup.domain._
+  | import co.triptailor.setup.nlp._
+  | import co.triptailor.setup._
+  | implicit val system = ActorSystem("triptailor-setup")
+  | implicit val mat = ActorMaterializer()
+  """.stripMargin
 
 // Clear console at the start of each run
 triggeredMessage in ThisBuild := Watched.clearWhenTriggered
