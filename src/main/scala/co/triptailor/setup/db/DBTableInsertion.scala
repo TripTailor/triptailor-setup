@@ -6,7 +6,7 @@ import co.triptailor.setup.domain.{HostelMetaData, RatedDocument, RatedReview, R
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class DBTableInsertion(implicit val ec: ExecutionContext) {
   import DBTableInsertion._

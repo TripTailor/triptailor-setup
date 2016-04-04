@@ -7,6 +7,7 @@ scalaVersion := "2.11.8"
 val akkaVersion        = "2.4.3"
 val ammoniteVersion    = "0.5.6"
 val slickVersion       = "3.1.1"
+val slickPGV           = "0.12.0"
 
 val utilityDependencies = Seq(
   "org.joda" % "joda-convert" % "1.7"
@@ -17,7 +18,9 @@ val dbDependencies = Seq(
   "com.typesafe.slick" %% "slick" % slickVersion,
   "com.typesafe.slick" %% "slick-codegen" % slickVersion,
   "com.typesafe.slick" %% "slick-hikaricp" % slickVersion,
-  "com.zaxxer" % "HikariCP" % "2.3.5" % Compile
+  "com.zaxxer" % "HikariCP" % "2.3.5" % Compile,
+  "com.github.tminglei" %% "slick-pg" % slickPGV,
+  "com.github.tminglei" %% "slick-pg_play-json" % slickPGV
 )
 
 val nlpAnalysisDependencies = Seq(
