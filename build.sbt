@@ -52,6 +52,8 @@ initialCommands in console := """
   | import akka.stream.ActorMaterializer
   | import scala.concurrent.{ Await, Future }
   | import scala.concurrent.duration._
+  | import com.typesafe.config.ConfigFactory
+  | import slick.backend.DatabaseConfig
   | import co.triptailor.setup.domain._
   | import co.triptailor.setup.nlp._
   | import co.triptailor.setup._
