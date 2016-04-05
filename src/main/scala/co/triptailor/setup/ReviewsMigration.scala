@@ -4,6 +4,8 @@ import com.typesafe.config.ConfigFactory
 import play.api.libs.json.{JsArray, JsNumber, JsValue, Json}
 import slick.backend.DatabaseConfig
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.matching.Regex
 
 object ReviewsMigration {
@@ -19,9 +21,17 @@ object ReviewsMigration {
   private val triptailorDB =
     DatabaseConfig.forConfig[slick.driver.PostgresDriver]("triptailor", ConfigFactory.load("db")).db
 
-  def main(args: Array[String]): Unit = {
-
-  }
+  def main(args: Array[String]): Unit =
+    try {
+      Await.result(triptailorDB.run(buildUpdateReviewsActions), Duration.Inf)
+      println("Done migrating reviews")
+    } catch {
+      case e: Throwable =>
+        println(s"Error migrating reviews")
+        println(e.getClass)
+        println(e.getMessage)
+        println(e.getStackTrace.mkString("\n"))
+    }
 
   private def addReviewSentiments(reviews: Seq[ReviewRow]) = {
     def buildSentimentsJsonb(review: ReviewRow) = review.sentiment.fold[JsValue] {
@@ -32,7 +42,7 @@ object ReviewsMigration {
     reviews.map(buildSentimentsJsonb)
   }
 
-  private def buildUpdateReviewData(data: Seq[ReviewData]) = {
+  private def buildUpdateReviewsActions = {
     def buildSentimentsJsonb(review: ReviewRow) = review.sentiment.fold[JsValue] {
       JsArray(Seq())
     } { sentimentsString =>
@@ -63,7 +73,9 @@ object ReviewsMigration {
           val attributes = buildAttributesJsonb(data)
           val updateQuery = Review.filter(_.id === data.review.id).map(r => (r.sentiments, r.attributes))
 
-          updateQuery.update(Some(sentiments), Some(Json.toJson(attributes)))
+          val query = updateQuery.update(Some(sentiments), Some(Json.toJson(attributes)))
+          println(query.statements)
+          query
         }
       }
     }
@@ -84,19 +96,20 @@ object ReviewsMigration {
         buildReviewData(reviewData)(grouped.tail)
       }
 
-    components.groupBy(_.r.id).mapValues(buildReviewData(ReviewData(null, null, null))).values
+    components.groupBy(_.r.id).mapValues(buildReviewData(null)).values
   }
 
   private def reviewsDataQuery =
     for {
-      (r, ar) ← Review join AttributeReview on (_.id === _.reviewId)
-      (ar, a) ← AttributeReview join Attribute on (_.attributeId === _.id)
+      r  ← Review
+      ar ← AttributeReview if r.id === ar.reviewId
+      a  ← Attribute       if a.id === ar.attributeId
     } yield (r, ar, a) <> (ReviewDataComponent.tupled, ReviewDataComponent.unapply)
 
   private[this] case class ReviewDataComponent(r: ReviewRow, ar: AttributeReviewRow, a: AttributeRow)
   private[this] case class ReviewData(review: ReviewRow, reviewAttributes: Seq[AttributeReviewRow], attributes: Seq[AttributeRow])
 
   private[this] case class AttributePosition(start: Int, end: Int, sentence: Int)
-  private[this] case class ReviewAttribute(id: Int, name: String, positions: Seq[AttributePosition])
+  private[this] case class ReviewAttribute(attribute_id: Int, attribute_name: String, positions: Seq[AttributePosition])
 
 }
