@@ -33,15 +33,6 @@ object ReviewsMigration {
         println(e.getStackTrace.mkString("\n"))
     }
 
-  private def addReviewSentiments(reviews: Seq[ReviewRow]) = {
-    def buildSentimentsJsonb(review: ReviewRow) = review.sentiment.fold[JsValue] {
-      JsArray(Seq())
-    } { sentimentsString =>
-      JsArray(sentimentsString.split(",").toSeq.map(nbr => JsNumber(BigDecimal(nbr))))
-    }
-    reviews.map(buildSentimentsJsonb)
-  }
-
   private def buildUpdateReviewsActions = {
     def buildSentimentsJsonb(review: ReviewRow) = review.sentiment.fold[JsValue] {
       JsArray(Seq())
@@ -54,9 +45,8 @@ object ReviewsMigration {
         case PositionsRegex(start, end, sentence) => AttributePosition(start.toInt, end.toInt, sentence.toInt)
       }
 
-      val mappings = data.attributes.groupBy(_.id).mapValues(_.head.name)
-
-      data.reviewAttributes.map { ar =>
+      def buildReviewAttributes(ar: AttributeReviewRow) = {
+        val mappings = data.attributes.groupBy(_.id).mapValues(_.head.name)
         val positions =
           for {
             m ← PositionsRegex.findAllMatchIn(ar.positions)
@@ -64,6 +54,7 @@ object ReviewsMigration {
         ReviewAttribute(ar.attributeId, mappings(ar.attributeId), positions.toSeq)
       }
 
+      data.reviewAttributes.map(buildReviewAttributes)
     }
 
     reviewsDataQuery.result.map(buildReviewsData).flatMap { reviewsData =>
