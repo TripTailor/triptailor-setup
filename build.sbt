@@ -4,7 +4,7 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
-val akkaVersion        = "2.4.3"
+val akkaVersion        = "2.4.4"
 val ammoniteVersion    = "0.5.6"
 val slickVersion       = "3.1.1"
 val slickPGV           = "0.12.0"
