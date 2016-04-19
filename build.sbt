@@ -4,8 +4,10 @@ version := "1.0"
 
 scalaVersion := "2.11.8"
 
+fork in run := true
+javaOptions += "-Xmx10G"
+
 val akkaVersion        = "2.4.4"
-val ammoniteVersion    = "0.5.6"
 val slickVersion       = "3.1.1"
 val slickPGV           = "0.12.0"
 
@@ -39,14 +41,9 @@ val testDependencies = Seq(
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
 )
 
-/*val ammoniteRepl = Seq(*/
-  /*"com.lihaoyi" % "ammonite-repl" % ammoniteVersion cross CrossVersion.full*/
-/*)*/
-
 libraryDependencies ++= utilityDependencies ++ dbDependencies ++ akkaDependencies ++
-  nlpAnalysisDependencies ++ testDependencies //++ ammoniteRepl
+  nlpAnalysisDependencies ++ testDependencies
 
-/*initialCommands in console := """ammonite.repl.Main.run("")"""*/
 initialCommands in console := """
   | import akka.actor.ActorSystem
   | import akka.stream.ActorMaterializer
