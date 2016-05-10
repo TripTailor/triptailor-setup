@@ -1,14 +1,16 @@
 package co.triptailor.setup.db
 
+import play.api.libs.json.JsValue
+
 // AUTO-GENERATED Slick data model
 /** Stand-alone Slick data model for immediate use */
 object Tables extends {
-  val profile = slick.driver.PostgresDriver
+  val profile = co.triptailor.setup.db.drivers.ExtendedPostgresDriver
 } with Tables
 
 /** Slick data model trait for extension, choice of backend or usage in the cake pattern. (Make sure to initialize this late.) */
 trait Tables {
-  val profile: slick.driver.JdbcProfile
+  val profile: co.triptailor.setup.db.drivers.ExtendedPostgresDriver
   import profile.api._
   import slick.model.ForeignKeyAction
   // NOTE: GetResult mappers for plain SQL are only generated for tables where Slick knows how to map the types of all columns.
@@ -112,7 +114,7 @@ trait Tables {
    *  @param name Database column name SqlType(varchar), Length(200,true)
    *  @param description Database column description SqlType(text), Default(None)
    *  @param price Database column price SqlType(float8), Default(None)
-   *  @param images Database column images SqlType(varchar), Length(500,true), Default(None)
+   *  @param images Database column images SqlType(text), Default(None)
    *  @param url Database column url SqlType(varchar), Length(400,true), Default(None)
    *  @param noReviews Database column no_reviews SqlType(int4)
    *  @param locationId Database column location_id SqlType(int4)
@@ -138,8 +140,8 @@ trait Tables {
     val description: Rep[Option[String]] = column[Option[String]]("description", O.Default(None))
     /** Database column price SqlType(float8), Default(None) */
     val price: Rep[Option[Double]] = column[Option[Double]]("price", O.Default(None))
-    /** Database column images SqlType(varchar), Length(500,true), Default(None) */
-    val images: Rep[Option[String]] = column[Option[String]]("images", O.Length(500,varying=true), O.Default(None))
+    /** Database column images SqlType(text), Default(None) */
+    val images: Rep[Option[String]] = column[Option[String]]("images", O.Default(None))
     /** Database column url SqlType(varchar), Length(400,true), Default(None) */
     val url: Rep[Option[String]] = column[Option[String]]("url", O.Length(400,varying=true), O.Default(None))
     /** Database column no_reviews SqlType(int4) */
@@ -346,18 +348,20 @@ trait Tables {
    *  @param age Database column age SqlType(int4), Default(None)
    *  @param sentiment Database column sentiment SqlType(varchar), Length(200,true), Default(None)
    *  @param lat Database column lat SqlType(int2), Default(None)
-   *  @param long Database column long SqlType(int2), Default(None) */
-  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: Option[String] = None, lat: Option[Short] = None, long: Option[Short] = None)
+   *  @param long Database column long SqlType(int2), Default(None)
+   *  @param sentiments Database column sentiments SqlType(jsonb), Length(2147483647,false), Default(None)
+   *  @param attributes Database column attributes SqlType(jsonb), Length(2147483647,false), Default(None) */
+  case class ReviewRow(id: Int, hostelId: Int, text: String, year: Option[java.sql.Date] = None, reviewer: Option[String] = None, city: Option[String] = None, gender: Option[String] = None, age: Option[Int] = None, sentiment: Option[String] = None, lat: Option[Short] = None, long: Option[Short] = None, sentiments: Option[JsValue] = None, attributes: Option[JsValue] = None)
   /** GetResult implicit for fetching ReviewRow objects using plain SQL queries */
   implicit def GetResultReviewRow(implicit e0: GR[Int], e1: GR[String], e2: GR[Option[java.sql.Date]], e3: GR[Option[String]], e4: GR[Option[Int]], e5: GR[Option[Short]]): GR[ReviewRow] = GR{
     prs => import prs._
-    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<?[String], <<?[Short], <<?[Short]))
+    ReviewRow.tupled((<<[Int], <<[Int], <<[String], <<?[java.sql.Date], <<?[String], <<?[String], <<?[String], <<?[Int], <<?[String], <<?[Short], <<?[Short], <<?[JsValue], <<?[JsValue]))
   }
   /** Table description of table review. Objects of this class serve as prototypes for rows in queries. */
   class Review(_tableTag: Tag) extends Table[ReviewRow](_tableTag, "review") {
-    def * = (id, hostelId, text, year, reviewer, city, gender, age, sentiment, lat, long) <> (ReviewRow.tupled, ReviewRow.unapply)
+    def * = (id, hostelId, text, year, reviewer, city, gender, age, sentiment, lat, long, sentiments, attributes) <> (ReviewRow.tupled, ReviewRow.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, sentiment, lat, long).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(id), Rep.Some(hostelId), Rep.Some(text), year, reviewer, city, gender, age, sentiment, lat, long, sentiments, attributes).shaped.<>({r=>import r._; _1.map(_=> ReviewRow.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column id SqlType(serial), AutoInc, PrimaryKey */
     val id: Rep[Int] = column[Int]("id", O.AutoInc, O.PrimaryKey)
@@ -381,6 +385,10 @@ trait Tables {
     val lat: Rep[Option[Short]] = column[Option[Short]]("lat", O.Default(None))
     /** Database column long SqlType(int2), Default(None) */
     val long: Rep[Option[Short]] = column[Option[Short]]("long", O.Default(None))
+    /** Database column sentiments SqlType(jsonb), Length(2147483647,false), Default(None) */
+    val sentiments: Rep[Option[JsValue]] = column[Option[JsValue]]("sentiments", O.Length(2147483647,varying=false), O.Default(None))
+    /** Database column attributes SqlType(jsonb), Length(2147483647,false), Default(None) */
+    val attributes: Rep[Option[JsValue]] = column[Option[JsValue]]("attributes", O.Length(2147483647,varying=false), O.Default(None))
 
     /** Index over (hostelId) (database name review_hostel_id_idx) */
     val index1 = index("review_hostel_id_idx", hostelId)

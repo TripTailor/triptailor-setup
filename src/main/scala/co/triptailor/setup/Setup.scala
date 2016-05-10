@@ -16,7 +16,7 @@ object Setup extends NLPAnalysisService {
   def main(args: Array[String]): Unit = {
     val parallelism = Runtime.getRuntime.availableProcessors()
 
-    implicit val system = ActorSystem("nlp-test")
+    implicit val system = ActorSystem("triptailor-setup")
     implicit val mat = ActorMaterializer()
     implicit val dao = new DBTableInsertion
 

@@ -6,7 +6,7 @@ import co.triptailor.setup.domain.{HostelMetaData, RatedDocument, RatedReview, R
 import com.typesafe.config.ConfigFactory
 import slick.backend.DatabaseConfig
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class DBTableInsertion(implicit val ec: ExecutionContext) {
   import DBTableInsertion._
@@ -14,19 +14,21 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   import slick.driver.PostgresDriver.api._
 
   def addHostelDependencies(document: RatedDocument) =
-    for {
-      locationId ← triptailorDB.run(idempotentInsertLocationQuery(document.info.city, document.info.country))
-      hostelId   ← triptailorDB.run(idempotentInsertHostelQuery(document.info, document.reviews.size, locationId, document.imagesUrls))
-      _          ← insertHostelDependencies(document, hostelId)
-    } yield hostelId
+    triptailorDB.run {
+      for {
+        locationId ← idempotentInsertLocationQuery(document.info.city, document.info.country)
+        hostelId   ← idempotentInsertHostelQuery(document.info, document.reviews.size, locationId, document.imagesUrls)
+        _          ← insertHostelDependencies(document, hostelId)
+      } yield hostelId
+    }
 
-  private def insertHostelDependencies(document: RatedDocument, hostelId: Int): Future[Int] =
+  private def insertHostelDependencies(document: RatedDocument, hostelId: Int) =
     for {
-      serviceIds ← triptailorDB.run(DBIO.sequence(document.info.services.map(idempotentInsertServiceQuery)))
-      _          ← triptailorDB.run(DBIO.sequence(insertHostelServicesQueries(hostelId, serviceIds)))
-      reviewIds  ← triptailorDB.run(DBIO.sequence(document.reviews.map(review => insertReviewQuery(hostelId, review))))
-      _          ← triptailorDB.run(DBIO.sequence(insertAttributeReviewsQueries(hostelId, document.reviews, reviewIds)))
-      _          ← triptailorDB.run(DBIO.sequence(insertHostelAttributesQueries(hostelId, document.metrics)))
+      serviceIds ← DBIO.sequence(document.info.services.map(idempotentInsertServiceQuery))
+      _          ← DBIO.sequence(insertHostelServicesQueries(hostelId, serviceIds))
+      reviewIds  ← DBIO.sequence(document.reviews.map(review => insertReviewQuery(hostelId, review)))
+      _          ← DBIO.sequence(insertAttributeReviewsQueries(hostelId, document.reviews, reviewIds))
+      _          ← DBIO.sequence(insertHostelAttributesQueries(hostelId, document.metrics))
     } yield hostelId
 
   private def insertAttributeReviewsQueries(hostelId: Int, reviews: Seq[RatedReview], reviewIds: Seq[Int]) =
