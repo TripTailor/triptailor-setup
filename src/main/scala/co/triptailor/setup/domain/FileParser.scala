@@ -10,9 +10,9 @@ object FileParser {
 
   def documentEntries =
     for {
-      country     ← data.listFiles.toSeq
-      city        ← country.listFiles.toSeq
-      hostel      ← city.listFiles.toSeq
+      country     ← data.listFiles.toSeq.filter(_.isDirectory)
+      city        ← country.listFiles.toSeq.filter(_.isDirectory)
+      hostel      ← city.listFiles.toSeq.filter(_.isDirectory)
       files       = hostel.listFiles.toSeq
       generalFile ← files.find(f => GeneralFile.pattern.matcher(f.getName).matches)
       reviewsFile ← files.find(f => ReviewsFile.pattern.matcher(f.getName).matches)
