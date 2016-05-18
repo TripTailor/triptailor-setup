@@ -16,15 +16,15 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
   def addHostelDependencies(document: RatedDocument) =
     triptailorDB.run {
       for {
-        locationId ← idempotentInsertLocationQuery(document.info.city, document.info.country)
-        hostelId   ← idempotentInsertHostelQuery(document.info, document.reviews.size, locationId, document.imagesUrls)
+        locationId ← insertLocationQuery(document.info.city, document.info.country)
+        hostelId   ← insertHostelQuery(document.info, document.reviews.size, locationId, document.imagesUrls)
         _          ← insertHostelDependencies(document, hostelId)
       } yield hostelId
     }
 
   private def insertHostelDependencies(document: RatedDocument, hostelId: Int) =
     for {
-      serviceIds ← DBIO.sequence(document.info.services.map(idempotentInsertServiceQuery))
+      serviceIds ← DBIO.sequence(document.info.services.map(insertServiceQuery))
       _          ← DBIO.sequence(insertHostelServicesQueries(hostelId, serviceIds))
       reviewIds  ← DBIO.sequence(document.reviews.map(review => insertReviewQuery(hostelId, review)))
       _          ← DBIO.sequence(insertAttributeReviewsQueries(hostelId, document.reviews, reviewIds))
@@ -37,7 +37,7 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
       token              ← review.tokens
     } yield idempotentInsertAttributeQuery(token.attribute) flatMap { aid =>
       val tokenPositions = token.positions.mkString(",")
-      idempotentInsertAttributeReviewQuery(AttributeReviewRow(aid, reviewId, tokenPositions))
+      insertAttributeReviewQuery(AttributeReviewRow(aid, reviewId, tokenPositions))
     }
 
   private def insertHostelAttributesQueries(hostelId: Int, metrics: Map[String, RatingMetrics]) =
@@ -45,11 +45,11 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
       attribute ← metrics.keys
     } yield idempotentInsertAttributeQuery(attribute) flatMap { aid =>
       val m = metrics(attribute)
-      idempotentInsertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, m.freq, m.cfreq, m.sentiment))
+      insertHostelAttributeQuery(HostelAttributeRow(hostelId, aid, m.freq, m.cfreq, m.sentiment))
     }
 
   private def insertHostelServicesQueries(hostelId: Int, serviceIds: Seq[Int]) =
-    serviceIds.map(sid => idempotentInsertHostelServiceQuery(HostelServiceRow(hostelId, sid)))
+    serviceIds.map(sid => insertHostelServiceQuery(HostelServiceRow(hostelId, sid)))
 
   private def insertReviewQuery(hostelId: Int, review: RatedReview) =
     Review.map(r => (r.hostelId, r.text, r.year, r.reviewer, r.city, r.gender, r.age, r.sentiment)) returning Review.map(_.id) += {
@@ -57,52 +57,25 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
         review.meta.city, review.meta.gender, review.meta.age, Some(review.sentiments.mkString(",")))
     }
 
-  private def idempotentInsertHostelAttributeQuery(row: HostelAttributeRow) =
-    HostelAttribute.filter(ha => ha.hostelId === row.hostelId && ha.attributeId === row.attributeId).result.headOption.flatMap { haOpt =>
-      haOpt.fold[DBIOAction[(Int,Int),NoStream,Effect.All]] {
-        (HostelAttribute returning HostelAttribute.map(row => (row.hostelId, row.attributeId))) += row
-      } { ha =>
-        DBIO.successful((ha.hostelId, ha.attributeId))
-      }
-    }.transactionally
+  private def insertHostelAttributeQuery(row: HostelAttributeRow) =
+    (HostelAttribute returning HostelAttribute.map(row => (row.hostelId, row.attributeId))) += row
 
-  private def idempotentInsertHostelServiceQuery(row: HostelServiceRow) =
-    HostelService.filter(hs => hs.hostelId === row.hostelId && hs.serviceId === row.serviceId).result.headOption.flatMap { hsOpt =>
-      hsOpt.fold[DBIOAction[(Int,Int),NoStream,Effect.All]] {
-        (HostelService returning HostelService.map(row => (row.hostelId, row.serviceId))) += row
-      } { hs =>
-        DBIO.successful((hs.hostelId, hs.serviceId))
-      }
-    }.transactionally
+  private def insertHostelServiceQuery(row: HostelServiceRow) =
+    (HostelService returning HostelService.map(row => (row.hostelId, row.serviceId))) += row
 
-  private def idempotentInsertAttributeReviewQuery(row: AttributeReviewRow) =
-    AttributeReview.filter(ar => ar.attributeId === row.attributeId && ar.reviewId === row.reviewId).result.headOption.flatMap { arOpt =>
-      arOpt.fold[DBIOAction[(Int,Int),NoStream,Effect.All]] {
-        (AttributeReview returning AttributeReview.map(row => (row.attributeId, row.reviewId))) += row
-      } { ar =>
-        DBIO.successful((ar.attributeId, ar.reviewId))
-      }
-    }.transactionally
+  private def insertAttributeReviewQuery(row: AttributeReviewRow) =
+    (AttributeReview returning AttributeReview.map(row => (row.attributeId, row.reviewId))) += row
 
-  private def idempotentInsertHostelQuery(info: HostelMetaData, noReviews: Int, locationId: Int, imagesUrls: Seq[String]) =
-    Hostel.filter(_.name === info.name).map(_.id).result.headOption.flatMap { hostelIdOpt =>
-      hostelIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
-        Hostel.map(h => (h.name, h.noReviews, h.locationId, h.address, h.description, h.images)) returning Hostel.map(_.id) += {
-          (info.name, noReviews, locationId, Some(info.address), Some(info.description), Some(imagesUrls.mkString(",")))
-        }
-      } { hostelId =>
-        DBIO.successful(hostelId)
-      }
-    }.transactionally
+  private def insertHostelQuery(info: HostelMetaData, noReviews: Int, locationId: Int, imagesUrls: Seq[String]) =
+    Hostel.map(h => (h.name, h.noReviews, h.locationId, h.address, h.description, h.images)) returning Hostel.map(_.id) += {
+      (info.name, noReviews, locationId, Some(info.address), Some(info.description), Some(imagesUrls.mkString(",")))
+    }
 
-  private def idempotentInsertLocationQuery(city: String, country: String) =
-    Location.filter(l => l.city === city && l.country === country).map(_.id).result.headOption.flatMap { locationIdOpt =>
-      locationIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
-        Location.map(l => (l.city, l.country)) returning Location.map(_.id) += (city, country)
-      } { locationId =>
-        DBIO.successful(locationId)
-      }
-    }.transactionally
+  private def insertLocationQuery(city: String, country: String) =
+    Location.map(l => (l.city, l.country)) returning Location.map(_.id) += (city, country)
+
+  private def insertServiceQuery(name: String) =
+    Service.map(_.name) returning Service.map(_.id) += name
 
   private def idempotentInsertAttributeQuery(name: String) =
     Attribute.filter(_.name === name).map(_.id).result.headOption.flatMap { attributeIdOpt =>
@@ -110,15 +83,6 @@ class DBTableInsertion(implicit val ec: ExecutionContext) {
         Attribute.map(_.name) returning Attribute.map(_.id) += name
       } { attributeId =>
         DBIO.successful(attributeId)
-      }
-    }.transactionally
-
-  private def idempotentInsertServiceQuery(name: String) =
-    Service.filter(_.name === name).map(_.id).result.headOption.flatMap { serviceIdOpt =>
-      serviceIdOpt.fold[DBIOAction[Int,NoStream,Effect.All]] {
-        Service.map(_.name) returning Service.map(_.id) += name
-      } { serviceId =>
-        DBIO.successful(serviceId)
       }
     }.transactionally
 
