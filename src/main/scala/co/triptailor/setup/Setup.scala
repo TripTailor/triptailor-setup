@@ -14,7 +14,7 @@ import scala.util.{Failure, Success}
 
 object Setup extends NLPAnalysisService {
   def main(args: Array[String]): Unit = {
-    val parallelism = Runtime.getRuntime.availableProcessors()
+    val parallelism = 1
 
     implicit val system = ActorSystem("triptailor-setup")
     implicit val mat = ActorMaterializer()
