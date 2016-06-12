@@ -2,12 +2,16 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.2
+-- Dumped by pg_dump version 9.5.2
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
@@ -37,14 +41,14 @@ CREATE SEQUENCE attribute_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.attribute_id_seq OWNER TO triptailor;
+ALTER TABLE attribute_id_seq OWNER TO triptailor;
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
 
 --
--- Name: attribute; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE attribute (
@@ -53,10 +57,23 @@ CREATE TABLE attribute (
 );
 
 
-ALTER TABLE public.attribute OWNER TO triptailor;
+ALTER TABLE attribute OWNER TO triptailor;
 
 --
--- Name: attribute_review; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_location; Type: TABLE; Schema: public; Owner: triptailor
+--
+
+CREATE TABLE attribute_location (
+    attribute_id integer NOT NULL,
+    location_id integer NOT NULL,
+    location_rating double precision NOT NULL
+);
+
+
+ALTER TABLE attribute_location OWNER TO triptailor;
+
+--
+-- Name: attribute_review; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE attribute_review (
@@ -66,10 +83,10 @@ CREATE TABLE attribute_review (
 );
 
 
-ALTER TABLE public.attribute_review OWNER TO triptailor;
+ALTER TABLE attribute_review OWNER TO triptailor;
 
 --
--- Name: attribute_search; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_search; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE attribute_search (
@@ -78,7 +95,7 @@ CREATE TABLE attribute_search (
 );
 
 
-ALTER TABLE public.attribute_search OWNER TO triptailor;
+ALTER TABLE attribute_search OWNER TO triptailor;
 
 --
 -- Name: hostel_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -92,10 +109,10 @@ CREATE SEQUENCE hostel_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.hostel_id_seq OWNER TO triptailor;
+ALTER TABLE hostel_id_seq OWNER TO triptailor;
 
 --
--- Name: hostel; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE hostel (
@@ -112,10 +129,10 @@ CREATE TABLE hostel (
 );
 
 
-ALTER TABLE public.hostel OWNER TO triptailor;
+ALTER TABLE hostel OWNER TO triptailor;
 
 --
--- Name: hostel_attribute; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_attribute; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE hostel_attribute (
@@ -127,10 +144,10 @@ CREATE TABLE hostel_attribute (
 );
 
 
-ALTER TABLE public.hostel_attribute OWNER TO triptailor;
+ALTER TABLE hostel_attribute OWNER TO triptailor;
 
 --
--- Name: hostel_search; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_search; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE hostel_search (
@@ -140,10 +157,10 @@ CREATE TABLE hostel_search (
 );
 
 
-ALTER TABLE public.hostel_search OWNER TO triptailor;
+ALTER TABLE hostel_search OWNER TO triptailor;
 
 --
--- Name: hostel_service; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_service; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE hostel_service (
@@ -152,7 +169,7 @@ CREATE TABLE hostel_service (
 );
 
 
-ALTER TABLE public.hostel_service OWNER TO triptailor;
+ALTER TABLE hostel_service OWNER TO triptailor;
 
 --
 -- Name: location_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -166,10 +183,10 @@ CREATE SEQUENCE location_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.location_id_seq OWNER TO triptailor;
+ALTER TABLE location_id_seq OWNER TO triptailor;
 
 --
--- Name: location; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: location; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE location (
@@ -182,7 +199,7 @@ CREATE TABLE location (
 );
 
 
-ALTER TABLE public.location OWNER TO triptailor;
+ALTER TABLE location OWNER TO triptailor;
 
 --
 -- Name: play_evolutions_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -196,10 +213,10 @@ CREATE SEQUENCE play_evolutions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.play_evolutions_id_seq OWNER TO triptailor;
+ALTER TABLE play_evolutions_id_seq OWNER TO triptailor;
 
 --
--- Name: play_evolutions; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: play_evolutions; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE play_evolutions (
@@ -213,10 +230,10 @@ CREATE TABLE play_evolutions (
 );
 
 
-ALTER TABLE public.play_evolutions OWNER TO triptailor;
+ALTER TABLE play_evolutions OWNER TO triptailor;
 
 --
--- Name: review; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: review; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE review (
@@ -230,11 +247,13 @@ CREATE TABLE review (
     age integer,
     sentiment character varying(200),
     lat smallint,
-    long smallint
+    long smallint,
+    sentiments jsonb,
+    attributes jsonb
 );
 
 
-ALTER TABLE public.review OWNER TO triptailor;
+ALTER TABLE review OWNER TO triptailor;
 
 --
 -- Name: review_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -248,7 +267,7 @@ CREATE SEQUENCE review_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.review_id_seq OWNER TO triptailor;
+ALTER TABLE review_id_seq OWNER TO triptailor;
 
 --
 -- Name: review_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: triptailor
@@ -269,10 +288,10 @@ CREATE SEQUENCE search_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.search_id_seq OWNER TO triptailor;
+ALTER TABLE search_id_seq OWNER TO triptailor;
 
 --
--- Name: search; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: search; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE search (
@@ -285,7 +304,7 @@ CREATE TABLE search (
 );
 
 
-ALTER TABLE public.search OWNER TO triptailor;
+ALTER TABLE search OWNER TO triptailor;
 
 --
 -- Name: service_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -299,10 +318,10 @@ CREATE SEQUENCE service_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.service_id_seq OWNER TO triptailor;
+ALTER TABLE service_id_seq OWNER TO triptailor;
 
 --
--- Name: service; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: service; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE service (
@@ -311,7 +330,7 @@ CREATE TABLE service (
 );
 
 
-ALTER TABLE public.service OWNER TO triptailor;
+ALTER TABLE service OWNER TO triptailor;
 
 --
 -- Name: share_id_seq; Type: SEQUENCE; Schema: public; Owner: triptailor
@@ -325,10 +344,10 @@ CREATE SEQUENCE share_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.share_id_seq OWNER TO triptailor;
+ALTER TABLE share_id_seq OWNER TO triptailor;
 
 --
--- Name: share; Type: TABLE; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: share; Type: TABLE; Schema: public; Owner: triptailor
 --
 
 CREATE TABLE share (
@@ -337,7 +356,7 @@ CREATE TABLE share (
 );
 
 
-ALTER TABLE public.share OWNER TO triptailor;
+ALTER TABLE share OWNER TO triptailor;
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: triptailor
@@ -347,7 +366,7 @@ ALTER TABLE ONLY review ALTER COLUMN id SET DEFAULT nextval('review_id_seq'::reg
 
 
 --
--- Name: attribute_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY attribute
@@ -355,7 +374,7 @@ ALTER TABLE ONLY attribute
 
 
 --
--- Name: attribute_review_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_review_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY attribute_review
@@ -363,7 +382,7 @@ ALTER TABLE ONLY attribute_review
 
 
 --
--- Name: attribute_search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY attribute_search
@@ -371,7 +390,7 @@ ALTER TABLE ONLY attribute_search
 
 
 --
--- Name: hostel_attribute_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_attribute_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY hostel_attribute
@@ -379,7 +398,7 @@ ALTER TABLE ONLY hostel_attribute
 
 
 --
--- Name: hostel_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY hostel
@@ -387,7 +406,7 @@ ALTER TABLE ONLY hostel
 
 
 --
--- Name: hostel_search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY hostel_search
@@ -395,7 +414,7 @@ ALTER TABLE ONLY hostel_search
 
 
 --
--- Name: hostel_service_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_service_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY hostel_service
@@ -403,7 +422,7 @@ ALTER TABLE ONLY hostel_service
 
 
 --
--- Name: location_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: location_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY location
@@ -411,7 +430,7 @@ ALTER TABLE ONLY location
 
 
 --
--- Name: play_evolutions_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: play_evolutions_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY play_evolutions
@@ -419,7 +438,7 @@ ALTER TABLE ONLY play_evolutions
 
 
 --
--- Name: review_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: review_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY review
@@ -427,7 +446,7 @@ ALTER TABLE ONLY review
 
 
 --
--- Name: search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: search_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY search
@@ -435,7 +454,7 @@ ALTER TABLE ONLY search
 
 
 --
--- Name: service_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: service_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY service
@@ -443,7 +462,7 @@ ALTER TABLE ONLY service
 
 
 --
--- Name: share_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: share_pkey; Type: CONSTRAINT; Schema: public; Owner: triptailor
 --
 
 ALTER TABLE ONLY share
@@ -451,98 +470,98 @@ ALTER TABLE ONLY share
 
 
 --
--- Name: attribute_review_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_review_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX attribute_review_attribute_id_idx ON attribute_review USING btree (attribute_id);
 
 
 --
--- Name: attribute_review_review_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_review_review_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX attribute_review_review_id_idx ON attribute_review USING btree (review_id);
 
 
 --
--- Name: attribute_search_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_search_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX attribute_search_attribute_id_idx ON attribute_search USING btree (attribute_id);
 
 
 --
--- Name: attribute_search_search_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: attribute_search_search_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX attribute_search_search_id_idx ON attribute_search USING btree (search_id);
 
 
 --
--- Name: hostel_attribute_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_attribute_attribute_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_attribute_attribute_id_idx ON hostel_attribute USING btree (attribute_id);
 
 
 --
--- Name: hostel_attribute_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_attribute_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_attribute_hostel_id_idx ON hostel_attribute USING btree (hostel_id);
 
 
 --
--- Name: hostel_location_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_location_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_location_id_idx ON hostel USING btree (location_id);
 
 
 --
--- Name: hostel_search_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_search_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_search_hostel_id_idx ON hostel_search USING btree (hostel_id);
 
 
 --
--- Name: hostel_search_search_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_search_search_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_search_search_id_idx ON hostel_search USING btree (search_id);
 
 
 --
--- Name: hostel_service_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_service_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_service_hostel_id_idx ON hostel_service USING btree (hostel_id);
 
 
 --
--- Name: hostel_service_service_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: hostel_service_service_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX hostel_service_service_id_idx ON hostel_service USING btree (service_id);
 
 
 --
--- Name: review_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: review_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX review_hostel_id_idx ON review USING btree (hostel_id);
 
 
 --
--- Name: search_city_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: search_city_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX search_city_id_idx ON search USING btree (city_id);
 
 
 --
--- Name: search_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor; Tablespace: 
+-- Name: search_hostel_id_idx; Type: INDEX; Schema: public; Owner: triptailor
 --
 
 CREATE INDEX search_hostel_id_idx ON search USING btree (hostel_id);
@@ -635,10 +654,6 @@ ALTER TABLE ONLY search
 ALTER TABLE ONLY search
     ADD CONSTRAINT search_ibfk_2 FOREIGN KEY (hostel_id) REFERENCES hostel(id) DEFERRABLE INITIALLY DEFERRED;
 
-
---
--- Name: public; Type: ACL; Schema: -; Owner: triptailor
---
 
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM triptailor;

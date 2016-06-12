@@ -17,7 +17,7 @@ trait Tables {
   import slick.jdbc.{GetResult => GR}
 
   /** DDL for all tables. Call .create to execute. */
-  lazy val schema: profile.SchemaDescription = Array(Attribute.schema, AttributeReview.schema, AttributeSearch.schema, Hostel.schema, HostelAttribute.schema, HostelSearch.schema, HostelService.schema, Location.schema, PlayEvolutions.schema, Review.schema, Search.schema, Service.schema, Share.schema).reduceLeft(_ ++ _)
+  lazy val schema: profile.SchemaDescription = Array(Attribute.schema, AttributeLocation.schema, AttributeReview.schema, AttributeSearch.schema, Hostel.schema, HostelAttribute.schema, HostelSearch.schema, HostelService.schema, Location.schema, PlayEvolutions.schema, Review.schema, Search.schema, Service.schema, Share.schema).reduceLeft(_ ++ _)
   @deprecated("Use .schema instead of .ddl", "3.0")
   def ddl = schema
 
@@ -43,6 +43,33 @@ trait Tables {
   }
   /** Collection-like TableQuery object for table Attribute */
   lazy val Attribute = new TableQuery(tag => new Attribute(tag))
+
+  /** Entity class storing rows of table AttributeLocation
+    *
+    *  @param attributeId Database column attribute_id SqlType(int4)
+    *  @param locationId Database column location_id SqlType(int4)
+    *  @param locationRating Database column location_rating SqlType(float8) */
+  case class AttributeLocationRow(attributeId: Int, locationId: Int, locationRating: Double)
+  /** GetResult implicit for fetching AttributeLocationRow objects using plain SQL queries */
+  implicit def GetResultAttributeLocationRow(implicit e0: GR[Int], e1: GR[Double]): GR[AttributeLocationRow] = GR{
+    prs => import prs._
+      AttributeLocationRow.tupled((<<[Int], <<[Int], <<[Double]))
+  }
+  /** Table description of table attribute_location. Objects of this class serve as prototypes for rows in queries. */
+  class AttributeLocation(_tableTag: Tag) extends Table[AttributeLocationRow](_tableTag, "attribute_location") {
+    def * = (attributeId, locationId, locationRating) <> (AttributeLocationRow.tupled, AttributeLocationRow.unapply)
+    /** Maps whole row to an option. Useful for outer joins. */
+    def ? = (Rep.Some(attributeId), Rep.Some(locationId), Rep.Some(locationRating)).shaped.<>({r=>import r._; _1.map(_=> AttributeLocationRow.tupled((_1.get, _2.get, _3.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+
+    /** Database column attribute_id SqlType(int4) */
+    val attributeId: Rep[Int] = column[Int]("attribute_id")
+    /** Database column location_id SqlType(int4) */
+    val locationId: Rep[Int] = column[Int]("location_id")
+    /** Database column location_rating SqlType(float8) */
+    val locationRating: Rep[Double] = column[Double]("location_rating")
+  }
+  /** Collection-like TableQuery object for table AttributeLocation */
+  lazy val AttributeLocation = new TableQuery(tag => new AttributeLocation(tag))
 
   /** Entity class storing rows of table AttributeReview
    *  @param attributeId Database column attribute_id SqlType(int4)
